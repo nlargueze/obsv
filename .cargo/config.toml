@@ -1,0 +1,5 @@
+[env]
+RUST_LOG = "trace"
+
+[alias]
+send-tests = "run --bin obsv-tester"

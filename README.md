@@ -2,6 +2,15 @@
 
 Super Simple Observability Platform
 
+```sh
+docker-compose up
+```
+
+## Overview
+
+- `obsv-collector`: Collector (OpenTelemetry)
+- `obsv-tester`: simple service to send test traces
+
 ## Notes
 
 ### Opentelemetry
@@ -94,12 +103,64 @@ On the app side,
 }
 ```
 
-#### Metrics
+##### Metrics
 
 A `Metric` captures an app metric, and can be of type: counter, async counter, up/down counter, async up/down counter, gauge, histogram. Those are aggregate measures.
 
-#### Logs
+##### Logs
 
 A `Log` is a timestamped text record.
 
-#### Parts
+#### Collector
+
+The collector:
+
+- receives incoming data: `Receiver`
+- processes the data: `Processor`
+- forwards the data to a backend: `Exporter`
+
+Deploy it
+
+```sh
+docker run otel/opentelemetry-collector
+```
+
+The collector can be deployed as an agent (sidecar), or gateway.
+
+Config example: `otel_coll_config.yaml`:
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: otelcol:4317
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+```

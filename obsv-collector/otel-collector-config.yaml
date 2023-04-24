@@ -1,0 +1,53 @@
+receivers:
+  otlp:
+    protocols:
+      # port 4317
+      grpc:
+      # port 4318
+      http:
+
+processors:
+  batch:
+
+exporters:
+  # Exports to stdout (debug)
+  logging:
+    verbosity: detailed
+  clickhouse:
+    endpoint: tcp://localhost:9000
+    database: otel
+    timeout: 5s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+extensions:
+  # Checks if the collector is up (port 13133)
+  health_check:
+  # Profiling (port 1777)
+  # pprof:
+  # Live data for debugging (port 55679)
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, clickhouse]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, clickhouse]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, clickhouse]
+  # For debugging
+  telemetry:
+    logs:
+      level: "debug"
