@@ -1,0 +1,40 @@
+receivers:
+  otlp:
+    protocols:
+      # TCP listsner on 4317
+      grpc:
+      # HTTP listsner on 4318
+      http:
+
+processors:
+  batch:
+
+exporters:
+  logging:
+    verbosity: detailed
+    # sampling_initial: 5
+    # sampling_thereafter: 200
+
+extensions:
+  # Checks if the collector is UP (port 13133)
+  health_check:
+  # Profiling
+  pprof:
+  # Debug pages (port 55679)
+  zpages:
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]

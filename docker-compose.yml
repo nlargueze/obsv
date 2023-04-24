@@ -41,7 +41,7 @@ services:
     command: [--config=/etc/otel-collector-config.yaml]
     volumes:
       # - host:container
-      - "./obsv-collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml"
+      - "./collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml"
     ports:
       # OTLP gRPC receiver
       - "4317:4317" 
