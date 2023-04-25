@@ -1,5 +1,8 @@
 //! A simple test service to send telemetry data
 
+use std::time::Duration;
+
+use opentelemetry_otlp::WithExportConfig;
 use serde::Deserialize;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 
@@ -22,33 +25,61 @@ async fn main() {
         .try_deserialize()
         .unwrap();
 
-    // setup telemetry
-    let otel_tracer_stdout = opentelemetry::sdk::export::trace::stdout::new_pipeline()
+    // init the tracer
+    init_tracer();
+
+    // Generate tests
+    gen_traces();
+}
+
+/// Initializes the tracer
+fn init_tracer() {
+    // STDOUT
+    let stdout_tracer = opentelemetry::sdk::export::trace::stdout::new_pipeline()
         .with_pretty_print(true)
         .install_simple();
-    let otel_exporter_otlp = opentelemetry_otlp::new_exporter().tonic();
-    let otel_tracer_otlp = opentelemetry_otlp::new_pipeline()
+
+    // OTLP
+    let otlp_exporter_cfg = opentelemetry_otlp::ExportConfig {
+        endpoint: "http://0.0.0.0:4317".to_string(),
+        timeout: Duration::from_secs(3),
+        protocol: opentelemetry_otlp::Protocol::Grpc,
+    };
+    let otlp_exporter = opentelemetry_otlp::new_exporter()
+        .tonic()
+        .with_export_config(otlp_exporter_cfg);
+    let otlp_tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(otel_exporter_otlp)
+        .with_exporter(otlp_exporter)
         .install_simple()
         .unwrap();
 
-    let otel_layer = tracing_opentelemetry::layer()
-        .with_tracer(otel_tracer_stdout)
-        .with_tracer(otel_tracer_otlp);
+    // tracing subscriber
+    let trc_layer = tracing_opentelemetry::layer()
+        .with_tracer(stdout_tracer)
+        .with_tracer(otlp_tracer);
+
     let trc_subscriber = tracing_subscriber::Registry::default()
         .with(tracing_subscriber::fmt::layer())
         .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(otel_layer);
+        .with(trc_layer);
     tracing::subscriber::set_global_default(trc_subscriber).unwrap();
-
-    // Send tests
-    send_trace();
-    println!("Test traces sent!")
 }
 
 /// Sends an OTEL trace
 #[tracing::instrument]
-fn send_trace() {
-    tracing::info!("Dummy trace");
+fn gen_traces() {
+    tracing::info!("Generating traces");
+
+    test_levels()
+}
+
+/// Send traces with different levels
+#[tracing::instrument]
+fn test_levels() {
+    tracing::trace!("**trace**");
+    tracing::debug!("**debug**");
+    tracing::info!("**info**");
+    tracing::warn!("**warn**");
+    tracing::error!("**error**");
 }

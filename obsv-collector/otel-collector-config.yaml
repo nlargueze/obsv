@@ -14,7 +14,7 @@ exporters:
   logging:
     verbosity: detailed
   clickhouse:
-    endpoint: tcp://localhost:9000
+    endpoint: tcp://clickhouse:9000
     database: otel
     timeout: 5s
     retry_on_failure:
