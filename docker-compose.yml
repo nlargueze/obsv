@@ -1,34 +1,34 @@
 version: "3.9"
 
 services:
-  # clickhouse:
-  #   image: clickhouse/clickhouse-server
-  #   ports:
-  #     # Clickhouse HTTP interface
-  #     - "8123:8123"
-  #     # Clickhouse TCP client
-  #     - "9000:9000"
-  #   volumes:
-  #     # /var/lib/clickhouse/ => data
-  #     # /var/log/clickhouse-server/ => logs
-  #     # /etc/clickhouse-server/config.d/*.xml => server config
-  #     # /etc/clickhouse-server/users.d/*.xml => user management
-  #     # /docker-entrypoint-initdb.d/ => DB inti scripts
-  #     - obsv-clickhouse:/var/lib/clickhouse
-  #     - obsv-clickhouse-server:/var/lib/clickhouse-server
-  #     # - ./data/clickhouse/:/var/lib/clickhouse/
-  #     # - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
-  #     # - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
-  #     # - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
-  #     # - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
-  #     # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
-  #     # - ./user_scripts:/var/lib/clickhouse/user_scripts/
-  #   healthcheck:
-  #     # NB: wget is installed (not CURL), -t=>nb of tries, -T=>timeout(s)
-  #     test: "wget http://localhost:8123 -t 1 -T 5"
-  #     interval: 1s
-  #     timeout: 5s
-  #     retries: 120
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports:
+      # Clickhouse HTTP interface
+      - "8123:8123"
+      # Clickhouse TCP client
+      - "9000:9000"
+    volumes:
+      # /var/lib/clickhouse/ => data
+      # /var/log/clickhouse-server/ => logs
+      # /etc/clickhouse-server/config.d/*.xml => server config
+      # /etc/clickhouse-server/users.d/*.xml => user management
+      # /docker-entrypoint-initdb.d/ => DB inti scripts
+      - clickhouse:/var/lib/clickhouse
+      - clickhouse-server:/var/lib/clickhouse-server
+      # - ./data/clickhouse/:/var/lib/clickhouse/
+      # - ./clickhouse-config.xml:/etc/clickhouse-server/config.xml
+      # - ./clickhouse-users.xml:/etc/clickhouse-server/users.xml
+      # - ./custom-function.xml:/etc/clickhouse-server/custom-function.xml
+      # - ./clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+      # - ./clickhouse-storage.xml:/etc/clickhouse-server/config.d/storage.xml
+      # - ./user_scripts:/var/lib/clickhouse/user_scripts/
+    healthcheck:
+      # NB: wget is installed (not CURL), -t=>nb of tries, -T=>timeout(s)
+      test: "wget http://localhost:8123 -t 1 -T 5"
+      interval: 1s
+      timeout: 5s
+      retries: 120   
 
   # hello:
   #   image: hello-world
@@ -50,11 +50,11 @@ services:
       # OTEL health_check extension
       - "13133:13133" 
       # OTEL zpages extension
-      - "55679:55679"
-    # depends_on:
-      # clickhouse:
-      #   condition: service_healthy
+      - "55679:55679"  
+    depends_on:
+      clickhouse:
+        condition: service_healthy
 
 volumes:
-  obsv-clickhouse:
-  obsv-clickhouse-server:
+  clickhouse:
+  clickhouse-server:

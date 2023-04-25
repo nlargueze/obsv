@@ -12,6 +12,17 @@ processors:
 exporters:
   logging:
     verbosity: detailed
+  clickhouse:
+    endpoint: tcp://clickhouse:9000
+    # endpoint: http://clickhouse:8123 => OK
+    database: otel
+    ttl_days: 3
+    timeout: 5s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
     # sampling_initial: 5
     # sampling_thereafter: 200
 
@@ -29,12 +40,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [logging, clickhouse]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [logging, clickhouse]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [logging, clickhouse]
