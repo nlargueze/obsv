@@ -41,7 +41,7 @@ fn init_tracer() {
 
     // OTLP
     let otlp_exporter_cfg = opentelemetry_otlp::ExportConfig {
-        endpoint: "http://localhost:4317".to_string(),
+        endpoint: "http://0.0.0.0:4317".to_string(),
         timeout: Duration::from_secs(3),
         protocol: opentelemetry_otlp::Protocol::Grpc,
     };
@@ -53,7 +53,7 @@ fn init_tracer() {
         .tonic()
         .with_export_config(otlp_exporter_cfg)
         .with_metadata(otlp_exporter_metadata);
-    // .with_tls_config(ClientTlsConfig::new().ca_certificate(cert));
+    // .with_tls_config(tonic::transport::ClientTlsConfig::new());
     let otlp_tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(otlp_exporter)
