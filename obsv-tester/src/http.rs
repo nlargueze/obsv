@@ -1,19 +1,17 @@
 //! HTTP requests
 
-use std::{env, fs, path::PathBuf, str::FromStr};
+use std::{env, fs, path::PathBuf};
 
 use clap::Args;
 use colored::Colorize;
 use futures::StreamExt;
 use hyper::{
-    header,
-    http::uri::{Authority, PathAndQuery, Scheme},
-    Body, Client, Request, Response, Uri,
+    header, http::HeaderValue, Body, Client, HeaderMap, Method, Request, Response, Uri, Version,
 };
 
 use crate::{
     error::{AdhocError, Error},
-    test::{Test, TestCollection},
+    test::{Test, TestSuite},
 };
 
 /// HTTP request arguments
@@ -22,7 +20,7 @@ pub struct HttpRequestArgs {
     /// HTTP method (eg . GET, POST, PUT, ...)
     method: String,
     /// URL (eg localhost:8080, :8080, ...)
-    uri: Uri,
+    uri: String,
     /// Displays the complete request
     #[arg(short, long)]
     file: Option<PathBuf>,
@@ -37,53 +35,79 @@ pub struct HttpRequestArgs {
 impl HttpRequestArgs {
     /// Creates the Http request from the CLI arguments
     fn to_request(&self) -> Result<Request<Body>, Error> {
-        // set URI
-        let mut uri_parts = self.uri.clone().into_parts();
-        if uri_parts.scheme.is_none() {
-            uri_parts.scheme = Some(Scheme::HTTP);
-        }
-        if uri_parts.path_and_query.is_none() {
-            uri_parts.path_and_query = Some(PathAndQuery::from_str("").unwrap());
-        }
-        if let Some(auth) = &uri_parts.authority {
-            if auth.host().is_empty() {
-                if auth.as_str().starts_with(':') {
-                    let auth_fixed = format!("localhost{}", auth);
-                    uri_parts.authority = Some(Authority::from_str(&auth_fixed).unwrap());
-                } else {
-                    return Err(Error::InvalidRequest(
-                        AdhocError("missing host".to_string()).into(),
-                    ));
-                }
+        // method
+        let method: Method = match self.method.to_uppercase().parse::<Method>() {
+            Ok(m) => m,
+            Err(err) => {
+                return Err(Error::InvalidRequest(err.into()));
             }
+        };
+
+        // URI
+        let mut uri_str = self.uri.clone();
+        // eprintln!("{uri_str}");
+        if uri_str.starts_with(':') {
+            // Only the port is provided => add localhost
+            uri_str = format!("http://localhost{uri_str}");
+        } else if !uri_str.starts_with("http://") && !uri_str.starts_with("https://") {
+            // Add http:// to allow parsing
+            uri_str = format!("http://{uri_str}");
         }
-        let uri = Uri::from_parts(uri_parts).unwrap();
+        let uri = match uri_str.parse::<Uri>() {
+            Ok(ok) => ok,
+            Err(err) => {
+                return Err(Error::InvalidRequest(
+                    AdhocError(format!("invalid URI: {err} ({uri_str})")).into(),
+                ));
+            }
+        };
         // eprintln!("{uri:?}");
 
-        // set header
+        // headers
         let crate_version = env::var("CARGO_PKG_VERSION").unwrap();
-        let header_user_agent = format!("curly/v{crate_version}");
+        let mut headers = HeaderMap::new();
+        let h_user_agent = HeaderValue::from_str(&format!("curly/v{crate_version}")).unwrap();
+        headers.insert(header::USER_AGENT, h_user_agent);
 
-        // set body
+        // body
         let body = if let Some(p) = &self.file {
+            let content_type = if let Some(ext) = p.extension() {
+                match ext.to_str().unwrap() {
+                    "json" => mime::APPLICATION_JSON,
+                    _ => mime::TEXT_PLAIN_UTF_8,
+                }
+            } else {
+                mime::TEXT_PLAIN_UTF_8
+            };
+            let h_content_type = HeaderValue::from_str(content_type.to_string().as_str()).unwrap();
+
             let bytes = match fs::read(p) {
                 Ok(ok) => ok,
                 Err(err) => {
                     return Err(Error::InvalidRequest(err.into()));
                 }
             };
+
+            headers.insert(header::CONTENT_TYPE, h_content_type);
+            headers.insert(header::CONTENT_LENGTH, bytes.len().into());
             Body::from(bytes)
         } else {
             Body::empty()
         };
 
         // request
-        let req = match Request::builder()
-            .uri(uri)
-            .header(header::USER_AGENT, header_user_agent)
-            .body(body)
-        {
-            Ok(r) => r,
+        let mut req_builder = Request::builder()
+            .version(Version::HTTP_11)
+            .method(method)
+            .uri(uri);
+        for (k, v) in headers {
+            req_builder = req_builder.header(k.unwrap(), v);
+
+            // headers.insert(k.clone(), v.clone());
+        }
+
+        let req = match req_builder.body(body) {
+            Ok(ok) => ok,
             Err(err) => {
                 return Err(Error::InvalidRequest(err.into()));
             }
@@ -94,14 +118,13 @@ impl HttpRequestArgs {
 }
 
 /// Sends HTTP requests
-pub async fn send_requests(args: HttpRequestArgs) -> Result<TestCollection, Error> {
+pub async fn send_requests(args: HttpRequestArgs) -> Result<TestSuite, Error> {
     let client = Client::new();
-    let printer = StdoutPrinter::default();
 
     // Print the request
     let req = args.to_request()?;
     if args.verbose {
-        printer.print_request(&req);
+        print_request(req).await;
     }
 
     // max number of concurrent streams
@@ -142,8 +165,8 @@ pub async fn send_requests(args: HttpRequestArgs) -> Result<TestCollection, Erro
                 Ok(res) => {
                     // print only if one test is running
                     if args.verbose && args.x.is_none() && test.idx == 0 {
-                        let printer = StdoutPrinter::default();
-                        printer.print_response(&res);
+                        println!();
+                        print_response(res).await;
                     }
                     Ok(test)
                 }
@@ -160,75 +183,95 @@ pub async fn send_requests(args: HttpRequestArgs) -> Result<TestCollection, Erro
     }
 }
 
-/// Trait that defines a printer
-trait Printer {
-    /// Prints a request to stdout
-    fn print_request(&self, req: &Request<Body>);
+/// Prints a [Request<Body>]
+async fn print_request(req: Request<Body>) {
+    // print URI + HTTP version
+    let method = req.method();
+    let uri: &Uri = req.uri();
+    let uri_host = uri.host().unwrap_or("");
+    let uri_path = uri.path();
+    let http_vers = format!("{:?}", req.version()).blue();
+    println!(
+        "{} {} {}",
+        method.to_string().green(),
+        uri_path.cyan(),
+        http_vers.blue()
+    );
 
-    /// Prints a response to stdout
-    fn print_response(&self, res: &Response<Body>);
+    // print headers
+    for (h_name, h_value) in req.headers() {
+        let h_name = h_name.to_string().cyan();
+        let h_value = h_value.to_str().unwrap().white();
+        println!("{h_name}: {h_value}");
+    }
+    println!("{}: {}", "host".cyan(), uri_host.white());
+
+    // print body
+    let body = req.into_body();
+    let bytes = hyper::body::to_bytes(body).await.unwrap();
+    if !bytes.is_empty() {
+        let body_str = std::str::from_utf8(&bytes).unwrap();
+        println!();
+        println!("{body_str}");
+    }
 }
 
-/// Implementation of [Print]
-#[derive(Debug, Default)]
-struct StdoutPrinter {}
-
-impl Printer for StdoutPrinter {
-    fn print_request(&self, req: &Request<Body>) {
-        // print URI + HTTP version
-        let method = req.method();
-        let uri: &Uri = req.uri();
-        let uri_host = uri.host().unwrap_or("");
-        let uri_path = uri.path();
-        let http_vers = format!("{:?}", req.version()).blue();
-        println!(
-            "{} {} {}",
-            method.to_string().green(),
-            uri_path.cyan(),
-            http_vers.blue()
-        );
-
-        // print headers
-        for (h_name, h_value) in req.headers() {
-            let h_name = h_name.to_string().cyan();
-            let h_value = h_value.to_str().unwrap().white();
-            println!("{h_name}: {h_value}");
+/// Prints a [Response<Body>]
+async fn print_response(res: Response<Body>) {
+    // print URI + HTTP version
+    let status = res.status();
+    let status_code = status.as_u16();
+    let status_str = status.canonical_reason().unwrap_or("non standard code");
+    match status_code {
+        0..=299 => {
+            println!(
+                "{} {} {}",
+                "=>".green(),
+                status_code.to_string().green(),
+                status_str.green()
+            )
         }
-        println!("{}: {}", "host".cyan(), uri_host.white());
-
-        // TODO: print body
-
-        println!();
+        300..=399 => {
+            println!(
+                "{} {} {}",
+                "=>".red(),
+                status_code.to_string().yellow(),
+                status_str.cyan()
+            )
+        }
+        _ => {
+            println!(
+                "{} {} {}",
+                "=>".red(),
+                status_code.to_string().red(),
+                status_str.red()
+            )
+        }
     }
 
-    fn print_response(&self, res: &Response<Body>) {
-        // print URI + HTTP version
-        let status = res.status();
-        let status_code = status.as_u16();
-        let status_str = status.canonical_reason().unwrap_or("non standard code");
-        match status_code {
-            0..=299 => {
-                println!("{}: {}", status_code.to_string().green(), status_str.cyan())
-            }
-            300..=399 => {
-                println!(
-                    "{}: {}",
-                    status_code.to_string().yellow(),
-                    status_str.cyan()
-                )
-            }
-            _ => {
-                println!("{}: {}", status_code.to_string().red(), status_str.cyan())
-            }
-        }
+    // print headers
+    for (h_name, h_value) in res.headers() {
+        let h_name = h_name.to_string().cyan();
+        let h_value = h_value.to_str().unwrap().white();
+        println!("{h_name}: {h_value}");
+    }
 
-        // print headers
-        for (h_name, h_value) in res.headers() {
-            let h_name = h_name.to_string().cyan();
-            let h_value = h_value.to_str().unwrap().white();
-            println!("{h_name}: {h_value}");
-        }
+    // print body
+    let body = res.into_body();
+    let bytes = hyper::body::to_bytes(body).await.unwrap();
+    if !bytes.is_empty() {
+        let body_str = std::str::from_utf8(&bytes).unwrap();
+        println!();
+        println!("{body_str}");
+    }
+}
 
-        // TODO: print body
+#[cfg(test)]
+mod tests {
+    // use super::*;
+
+    #[test]
+    fn test_add() {
+        todo!();
     }
 }

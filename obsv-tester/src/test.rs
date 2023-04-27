@@ -1,8 +1,11 @@
 //! Tests
 
-use std::{fmt::Debug, ops::Sub};
+use std::{
+    fmt::{Debug, Display},
+    ops::Sub,
+};
 
-use time::Instant;
+use time::{Duration, Instant};
 
 /// A single test
 #[derive(Debug)]
@@ -17,7 +20,7 @@ pub struct Test {
     pub status: Option<TestStatus>,
 }
 
-/// Test result
+/// Test status
 #[derive(Debug)]
 pub enum TestStatus {
     // OK
@@ -70,12 +73,29 @@ impl TestStatus {
 
 /// A collection of tests
 #[derive(Debug, Default)]
-pub struct TestCollection {
+pub struct TestSuite {
     /// Test
     pub tests: Vec<Test>,
 }
 
-impl TestCollection {
+/// Statistics for a collection of tests
+#[derive(Debug, Default)]
+pub struct TestSuiteStats {
+    /// Nb of tests ran
+    pub total: usize,
+    /// Nb of successful tests
+    pub successful: usize,
+    /// Nb of failed tests
+    pub failed: usize,
+    /// Average time
+    pub average: Duration,
+    /// Fastest time
+    pub fastest: Duration,
+    /// Slowest time
+    pub slowest: Duration,
+}
+
+impl TestSuite {
     /// Instantiates a new [TestCollection]
     pub fn new() -> Self {
         Self::default()
@@ -97,31 +117,48 @@ impl TestCollection {
         self.tests.get(i)
     }
 
-    /// Prints the results to stdout
-    pub fn print(&self) {
+    /// Returns the [TestCollStats]
+    pub fn stats(&self) -> TestSuiteStats {
         let total = self.tests.len();
-        let success = self.tests.iter().filter(|t| t.status.is_some()).count();
-        let failure = self.tests.iter().filter(|t| t.status.is_none()).count();
+        let successful = self.tests.iter().filter(|t| t.status.is_some()).count();
+        let failed = self.tests.iter().filter(|t| t.status.is_none()).count();
         let durations = self
             .tests
             .iter()
             .filter(|t| t.end.is_some())
             .map(|t| t.end.unwrap().sub(t.start))
             .collect::<Vec<_>>();
-        let slowest = durations.iter().min().unwrap();
-        let fastest = durations.iter().max().unwrap();
+        let total_u32: u32 = total.try_into().unwrap();
+        let average = durations.iter().sum::<Duration>() / total_u32;
+        let fastest = *durations.iter().min().unwrap();
+        let slowest = *durations.iter().max().unwrap();
 
-        println!("Summary:       ");
-        println!("  Total:   {}", total);
-        println!("  Success:   {}", success);
-        println!("  Failure:   {}", failure);
-        println!("  Slowest: {}ms", slowest.whole_milliseconds());
-        println!("  Fastest: {}ms", fastest.whole_milliseconds());
+        TestSuiteStats {
+            total,
+            successful,
+            failed,
+            average,
+            fastest,
+            slowest,
+        }
     }
 }
 
-impl From<Vec<Test>> for TestCollection {
+impl From<Vec<Test>> for TestSuite {
     fn from(value: Vec<Test>) -> Self {
         Self { tests: value }
+    }
+}
+
+impl Display for TestSuiteStats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Summary:       ")?;
+        writeln!(f, "  Total:   {}", self.total)?;
+        writeln!(f, "  Success:   {}", self.successful)?;
+        writeln!(f, "  Failure:   {}", self.failed)?;
+        writeln!(f, "  Average: {}ms", self.average.whole_milliseconds())?;
+        writeln!(f, "  Slowest: {}ms", self.slowest.whole_milliseconds())?;
+        writeln!(f, "  Fastest: {}ms", self.fastest.whole_milliseconds())?;
+        Ok(())
     }
 }
