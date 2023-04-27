@@ -2,10 +2,10 @@
 
 Tools to send test traces/logs/metrics
 
-```sh
-# Send a trace to the OTLP HTTP receiver (requires HTTPie)
-./scripts/send-trace-http.sh
+## Proto definitions
 
-# Send a trace to the OTLP HTTP receiver (requires grpcurl)
-./scripts/send-trace-grpc.sh
-```
+Proto definitions for the OpenTelemetry collector have been downloaded from `https://github.com/open-telemetry/opentelemetry-proto`.
+
+## Dev notes
+
+- `https://ghz.sh/` is a load testing tool for gRPC (tried but fiddly as per quick tests)

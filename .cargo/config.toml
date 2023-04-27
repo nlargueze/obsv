@@ -2,4 +2,5 @@
 RUST_LOG = "trace"
 
 [alias]
-send-tests = "run --bin obsv-tester"
+curly = "run --bin curly --"
+curly-rel = "run --bin curly --release --"

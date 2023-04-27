@@ -1,2 +1,2 @@
 [workspace]
-members = ["obsv-tester"]
+members = ["obsv-core", "obsv-tester", "obsv-collector"]
