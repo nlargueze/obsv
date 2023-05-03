@@ -3,14 +3,12 @@
 use std::{env, fs, path::PathBuf};
 
 use clap::Args;
-use colored::Colorize;
 use futures::StreamExt;
-use hyper::{
-    header, http::HeaderValue, Body, Client, HeaderMap, Method, Request, Response, Uri, Version,
-};
+use hyper::{header, http::HeaderValue, Body, Client, HeaderMap, Method, Request, Uri, Version};
 
 use crate::{
     error::{AdhocError, Error},
+    fmt::{print_request, print_response},
     test::{Test, TestSuite},
 };
 
@@ -49,7 +47,7 @@ impl HttpRequestArgs {
         if uri_str.starts_with(':') {
             // Only the port is provided => add localhost
             uri_str = format!("http://localhost{uri_str}");
-        } else if !uri_str.starts_with("http://") && !uri_str.starts_with("https://") {
+        } else if !uri_str.starts_with("http://") & !uri_str.starts_with("https://") {
             // Add http:// to allow parsing
             uri_str = format!("http://{uri_str}");
         }
@@ -97,7 +95,7 @@ impl HttpRequestArgs {
 
         // request
         let mut req_builder = Request::builder()
-            .version(Version::HTTP_11)
+            .version(Version::HTTP_2)
             .method(method)
             .uri(uri);
         for (k, v) in headers {
@@ -119,7 +117,13 @@ impl HttpRequestArgs {
 
 /// Sends HTTP requests
 pub async fn send_requests(args: HttpRequestArgs) -> Result<TestSuite, Error> {
-    let client = Client::new();
+    let http_conn = hyper_rustls::HttpsConnectorBuilder::new()
+        .with_native_roots()
+        .https_or_http()
+        .enable_http1()
+        .build();
+
+    let client = Client::builder().build(http_conn);
 
     // Print the request
     let req = args.to_request()?;
@@ -180,89 +184,6 @@ pub async fn send_requests(args: HttpRequestArgs) -> Result<TestSuite, Error> {
     match tests {
         Ok(vec_tests) => Ok(vec_tests.into()),
         Err(err) => Err(err),
-    }
-}
-
-/// Prints a [Request<Body>]
-async fn print_request(req: Request<Body>) {
-    // print URI + HTTP version
-    let method = req.method();
-    let uri: &Uri = req.uri();
-    let uri_host = uri.host().unwrap_or("");
-    let uri_path = uri.path();
-    let http_vers = format!("{:?}", req.version()).blue();
-    println!(
-        "{} {} {}",
-        method.to_string().green(),
-        uri_path.cyan(),
-        http_vers.blue()
-    );
-
-    // print headers
-    for (h_name, h_value) in req.headers() {
-        let h_name = h_name.to_string().cyan();
-        let h_value = h_value.to_str().unwrap().white();
-        println!("{h_name}: {h_value}");
-    }
-    println!("{}: {}", "host".cyan(), uri_host.white());
-
-    // print body
-    let body = req.into_body();
-    let bytes = hyper::body::to_bytes(body).await.unwrap();
-    if !bytes.is_empty() {
-        let body_str = std::str::from_utf8(&bytes).unwrap();
-        println!();
-        println!("{body_str}");
-    }
-}
-
-/// Prints a [Response<Body>]
-async fn print_response(res: Response<Body>) {
-    // print URI + HTTP version
-    let status = res.status();
-    let status_code = status.as_u16();
-    let status_str = status.canonical_reason().unwrap_or("non standard code");
-    match status_code {
-        0..=299 => {
-            println!(
-                "{} {} {}",
-                "=>".green(),
-                status_code.to_string().green(),
-                status_str.green()
-            )
-        }
-        300..=399 => {
-            println!(
-                "{} {} {}",
-                "=>".red(),
-                status_code.to_string().yellow(),
-                status_str.cyan()
-            )
-        }
-        _ => {
-            println!(
-                "{} {} {}",
-                "=>".red(),
-                status_code.to_string().red(),
-                status_str.red()
-            )
-        }
-    }
-
-    // print headers
-    for (h_name, h_value) in res.headers() {
-        let h_name = h_name.to_string().cyan();
-        let h_value = h_value.to_str().unwrap().white();
-        println!("{h_name}: {h_value}");
-    }
-
-    // print body
-    let body = res.into_body();
-    let bytes = hyper::body::to_bytes(body).await.unwrap();
-    if !bytes.is_empty() {
-        let body_str = std::str::from_utf8(&bytes).unwrap();
-        println!();
-        println!("{body_str}");
     }
 }
 

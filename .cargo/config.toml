@@ -4,3 +4,4 @@ RUST_LOG = "trace"
 [alias]
 curly = "run --bin curly --"
 curly-rel = "run --bin curly --release --"
+RUST_LOG = "trace"
