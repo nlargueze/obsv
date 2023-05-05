@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "obsv-core",
-    "obsv-tester",
-    "obsv-collector",
-    "obsv-alert",
-    "obsv-notif",
+    "obsv-collect",
+    "obsv-monitor",
+    "obsv-store",
+    "obsv-report",
+    "lib/obsv-notif",
+    "lib/obsv-status",
 ]

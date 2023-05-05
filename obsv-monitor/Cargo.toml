@@ -1,0 +1,38 @@
+[package]
+name = "obsv-monitor"
+version = "0.1.0"
+edition = "2021"
+description = "Service monitoring"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nlargueze/obsv"
+
+[[example]]
+name = "hello"
+required-features = ["rt-tokio"]
+
+[features]
+default = ["rt-tokio", "http"]
+rt-tokio = ["dep:tokio"]
+http = ["dep:hyper", "dep:hyper-rustls"]
+
+[dependencies]
+async-trait = "0.1.68"
+hyper = { version = "0.14.26", optional = true, features = [
+    "runtime",
+    "http1",
+    "client",
+] }
+thiserror = "1.0.40"
+tokio = { version = "1.28.0", optional = true, features = [
+    "time",
+    "macros",
+    "rt-multi-thread",
+] }
+time = { version = "0.3.20", features = ["serde", "formatting", "macros"] }
+serde = { version = "1.0.160", features = ["derive"] }
+log = "0.4.17"
+duration-string = "0.3.0"
+hyper-rustls = { version = "0.24.0", optional = true }
+
+[dev-dependencies]
+env_logger = "0.10.0"

@@ -4,14 +4,14 @@ use std::process::exit;
 
 use clap::Parser;
 use colored::Colorize;
-use obsv_tester::CliArgs;
+use obsv_test::CliArgs;
 
 #[tokio::main]
 async fn main() {
     let cli = CliArgs::parse();
     // println!("{cli:#?}");
 
-    let tests = match obsv_tester::exec(cli).await {
+    let tests = match obsv_test::exec(cli).await {
         Ok(tests) => tests,
         Err(err) => {
             eprintln!("{}", "ERROR:".red());

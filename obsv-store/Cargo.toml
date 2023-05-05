@@ -1,5 +1,5 @@
 [package]
-name = "obsv-core"
+name = "obsv-store"
 version = "0.1.0"
 edition = "2021"
 

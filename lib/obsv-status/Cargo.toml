@@ -1,0 +1,10 @@
+[package]
+name = "obsv-status"
+version = "0.1.0"
+edition = "2021"
+description = "Status pages"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nlargueze/obsv"
+
+[dependencies]
+yew = { version = "0.20.0", features = ["csr"] }

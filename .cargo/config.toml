@@ -1,5 +1,5 @@
 [env]
-RUST_LOG = "trace"
+RUST_LOG = "off,obsv_monitor=off"
 
 [alias]
 curly = "run --bin curly --"

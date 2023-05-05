@@ -3,15 +3,59 @@
 Super Simple Observability Platform
 
 ```sh
-docker-compose up
+simple install script
 ```
 
 ## Overview
 
-- `obsv-collector`: Collector (OpenTelemetry)
-- `obsv-tester`: simple service to send test traces
+```mermaid
+flowchart LR
+    in_otel_http[Otel HTTP]
+    in_otel_grpc[Otel GRPC]
+    in_events[Events, Analytics]
+    in_services[Services]
 
-## Notes
+    out_dashboard[Dashboard]
+    out_status[Status page]
+    out_notifs[Notifications]
+
+    subgraph obsv [Obsv]
+        coll[Collector]
+        db["DB (ClickHouse)"]
+        reporter[Reporter]
+        monitor[Monitor]
+    end
+
+    in_events --> |:4319| coll
+    in_otel_grpc --> |:4318| coll
+    in_otel_http --> |:4317| coll
+    in_services --> monitor
+
+    coll --> db
+    db --> reporter
+    monitor --> db
+
+    reporter --> |:5001| out_dashboard
+    reporter --> |:5002| out_status
+    reporter --> |email, etc| out_notifs
+
+```
+
+## Repo organization
+
+- `obsv-collect`: server to collect data (Otel)
+- `obsv-monitor`: service to monitor services
+- `obsv-store`: internal storage
+- `obsv-report`: server to serve data, pages, and notify
+- `lib/**`: shared libraries
+
+## Similar tools
+
+- [Jaeger](https://github.com/teletrace/teletrace): tracing collector and dashboard
+- [Prometheus](https://prometheus.io/): metrics and alerting toolkit
+- [teletrace](https://github.com/teletrace/teletrace): tracing collector and dashboard (ElasticSearch DB + Collector/Server).
+- [Vigil](https://github.com/valeriansaliou/vigil): monitors, alerts, status page
+- ...
 
 ### Opentelemetry
 
