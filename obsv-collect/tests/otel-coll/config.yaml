@@ -13,15 +13,15 @@ exporters:
   # Exports to stdout (debug)
   logging:
     verbosity: detailed
-  clickhouse:
-    endpoint: tcp://clickhouse:9000
-    database: otel
-    timeout: 5s
-    retry_on_failure:
-      enabled: true
-      initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+  # clickhouse:
+  #   endpoint: tcp://clickhouse:9000
+  #   database: otel
+  #   timeout: 5s
+  #   retry_on_failure:
+  #     enabled: true
+  #     initial_interval: 5s
+  #     max_interval: 30s
+  #     max_elapsed_time: 300s
 
 extensions:
   # Checks if the collector is up (port 13133)

@@ -1,0 +1,20 @@
+[package]
+name = "obsv-otlp"
+version = "0.1.0"
+edition = "2021"
+description = "OpenTelemetry structs and utilities"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nlargueze/obsv"
+
+[dependencies]
+prost = "0.11.9"
+serde = { version = "1.0.162", features = ["derive"] }
+
+[build-dependencies]
+anyhow = "1.0.71"
+downloader = "0.2.7"
+flate2 = "1.0.26"
+prost-build = "0.11.9"
+tar = "0.4.38"
+walkdir = "2.3.3"
+zip-extract = "0.1.2"

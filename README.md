@@ -42,6 +42,7 @@ flowchart LR
 
 ## Repo organization
 
+- `obsv-core`: core structures and utilities
 - `obsv-collect`: server to collect data (Otel)
 - `obsv-monitor`: service to monitor services
 - `obsv-store`: internal storage

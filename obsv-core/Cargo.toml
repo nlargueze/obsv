@@ -1,0 +1,12 @@
+[package]
+name = "obsv-core"
+version = "0.1.0"
+edition = "2021"
+description = "obsv structures and utilities"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nlargueze/obsv"
+
+[dependencies]
+erased-serde = "0.3.25"
+serde = { version = "1.0.162", features = ["derive"] }
+time = { version = "0.3.21", features = ["formatting", "macros", "serde"] }

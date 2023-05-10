@@ -20,7 +20,7 @@ async fn real_main() {
         .unwrap()
         .frequency(Duration::from_secs(5));
     let exporter_stdout = StdoutExporter::new("stdout");
-    let exporter_ch = ClickhouseExporter::new("clickhouse", "http://localhost:8123", "obsv");
+    let exporter_ch = ClickhouseExporter::new("clickhouse", "http://localhost:8123", "test");
 
     MonitoringService::new()
         .monitor(monitor_google)
