@@ -38,7 +38,6 @@ flowchart LR
     reporter --> |:5001| out_dashboard
     reporter --> |:5002| out_status
     reporter --> |email, etc| out_notifs
-
 ```
 
 ## Repo organization
@@ -55,6 +54,7 @@ flowchart LR
 - [Prometheus](https://prometheus.io/): metrics and alerting toolkit
 - [teletrace](https://github.com/teletrace/teletrace): tracing collector and dashboard (ElasticSearch DB + Collector/Server).
 - [Vigil](https://github.com/valeriansaliou/vigil): monitors, alerts, status page
+- [QRYN](https://github.com/metrico/qryn): observability platform
 - ...
 
 ### Opentelemetry

@@ -39,17 +39,17 @@ pub struct MonitorCheck {
 /// Monitor check status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MonitorCheckStatus {
-    Running,
-    Succeded { duration: Duration },
-    Failed { duration: Duration, message: String },
+    Started,
+    Success { duration: Duration },
+    Failure { duration: Duration, message: String },
 }
 
 impl Display for MonitorCheckStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MonitorCheckStatus::Running => write!(f, "running"),
-            MonitorCheckStatus::Succeded { duration } => write!(f, "OK ({:?})", duration),
-            MonitorCheckStatus::Failed { duration, message } => {
+            MonitorCheckStatus::Started => write!(f, "running"),
+            MonitorCheckStatus::Success { duration } => write!(f, "OK ({:?})", duration),
+            MonitorCheckStatus::Failure { duration, message } => {
                 write!(f, "ERROR ({:?}) - {} ", duration, message)
             }
         }
@@ -62,24 +62,40 @@ impl MonitorCheck {
         Self {
             monitor: monitor.to_string(),
             timestamp: OffsetDateTime::now_utc(),
-            status: MonitorCheckStatus::Running,
+            status: MonitorCheckStatus::Started,
         }
     }
 
-    /// Sets the check as success
+    /// Marks the check as success
     pub fn succeeded(&mut self) {
         let duration = OffsetDateTime::now_utc() - self.timestamp;
-        self.status = MonitorCheckStatus::Succeded {
+        self.status = MonitorCheckStatus::Success {
             duration: duration.try_into().unwrap(),
         };
     }
 
-    /// Sets the check as a failure
+    /// Marks the check as a failure
     pub fn failed(&mut self, msg: &str) {
         let duration = OffsetDateTime::now_utc() - self.timestamp;
-        self.status = MonitorCheckStatus::Failed {
+        self.status = MonitorCheckStatus::Failure {
             duration: duration.try_into().unwrap(),
             message: msg.to_string(),
         }
+    }
+
+    /// Checks if the check is a success
+    pub fn is_success(&self) -> bool {
+        matches!(self.status, MonitorCheckStatus::Success { duration: _ })
+    }
+
+    /// Checks if the check is an error
+    pub fn is_error(&self) -> bool {
+        matches!(
+            self.status,
+            MonitorCheckStatus::Failure {
+                duration: _,
+                message: _
+            }
+        )
     }
 }

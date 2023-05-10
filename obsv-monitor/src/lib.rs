@@ -1,11 +1,13 @@
 //! Monitoring service
 //!
-//! This crate provides a [MonitoringService] which can be monitor other services,
+//! This crate provides a [MonitoringService] service, which checks monitors at regular intervals,
+//! and exports the results to a backend (stdout, DB, etc ...).
 //!
 //! # Features
 //!
 //! - **rt-tokio**: Tokio-dependent features
 //! - **http**: HTTP monitor
+//! - **clickhouse**: Clickhouse exporter
 
 use crate::monitor::Monitor;
 use export::Exporter;
@@ -102,9 +104,11 @@ impl MonitoringService {
             let handle = tokio::spawn(async move {
                 loop {
                     let check = rx.recv().await.unwrap();
-                    log::trace!("[exporter:{}] received: {}", exporter.id(), check.status);
+                    log::trace!("[exporter:{}] exporting: {}", exporter.id(), check.status);
                     match exporter.export(&check).await {
-                        Ok(_) => {}
+                        Ok(_) => {
+                            log::trace!("[exporter:{}] exported: {}", exporter.id(), check.status);
+                        }
                         Err(err) => {
                             log::error!("[exporter:{}] ERROR: {}", exporter.id(), err.to_string());
                         }
@@ -126,13 +130,31 @@ impl MonitoringService {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use std::sync::Once;
 
-//     #[test]
-//     fn it_works() {
-//         let result = add(2, 2);
-//         assert_eq!(result, 4);
-//     }
-// }
+    use tracing_ext::sub::PrettyConsoleLayer;
+    use tracing_subscriber::{prelude::*, EnvFilter};
+
+    static INIT: Once = Once::new();
+
+    /// Initializes the tracer
+    pub(crate) fn init_tracer() {
+        INIT.call_once(|| {
+            let layer_filter = EnvFilter::from_default_env();
+            let layer_console = PrettyConsoleLayer::default()
+                .wrapped(true)
+                .oneline(false)
+                .events_only(false)
+                .show_time(false)
+                .show_target(true)
+                .show_span_info(false)
+                .indent(6);
+            tracing_subscriber::registry()
+                .with(layer_console)
+                .with(layer_filter)
+                .init();
+        });
+    }
+}

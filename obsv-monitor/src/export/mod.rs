@@ -4,7 +4,11 @@ use async_trait::async_trait;
 
 use crate::{error::Error, monitor::MonitorCheck};
 
+pub mod file;
 pub mod stdout;
+
+#[cfg(feature = "clickhouse")]
+pub mod clickhouse;
 
 /// A trait to represent a monitor exporter
 #[async_trait]

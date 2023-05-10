@@ -122,3 +122,18 @@ impl Monitor for HttpMonitor {
         check
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_monitor_http() {
+        let monitor = HttpMonitor::new("google", "http://www.google.com")
+            .unwrap()
+            .frequency(Duration::from_secs(5));
+
+        let res = monitor.check().await;
+        assert!(res.is_success());
+    }
+}

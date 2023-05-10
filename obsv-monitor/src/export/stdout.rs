@@ -1,4 +1,4 @@
-//! File exporter
+//! Stdout exporter
 
 use async_trait::async_trait;
 use time::macros::format_description;
@@ -77,5 +77,23 @@ where
         let msg = self.formatter.format(check);
         eprintln!("{}", msg);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_exporter_stdout() {
+        let exporter = StdoutExporter::new("test_monitor");
+
+        let mut check = MonitorCheck::start("test_monitor");
+        check.succeeded();
+        exporter.export(&check).await.unwrap();
+
+        let mut check = MonitorCheck::start("test_monitor");
+        check.failed("dummy error");
+        exporter.export(&check).await.unwrap();
     }
 }
