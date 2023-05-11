@@ -61,16 +61,16 @@ fn main() -> Result<()> {
         // Span ID is a 16 bytes and the JSON MUST be serialized as a 16 bytes HEX value with no leading 0x
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.trace_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
         )
         // Span ID is a 8 bytes and the JSON MUST be serialized as a 8 bytes HEX value with no leading 0x
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.span_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
         )
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.parent_span_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
         )
         .compile(&protos, &[&target_dir])?;
     println!("cargo:warning=generated rust bindings");

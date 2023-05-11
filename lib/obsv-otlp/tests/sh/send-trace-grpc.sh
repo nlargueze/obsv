@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 SCRIPTPATH=$(dirname "$0")
-TEST_FILE="$SCRIPTPATH/data-spans.json"
+TEST_FILE="$SCRIPTPATH/request.json"
 
 # ERROR HERE
 
