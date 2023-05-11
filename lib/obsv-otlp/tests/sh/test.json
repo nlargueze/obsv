@@ -1,0 +1,63 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": { "value": { "stringValue": "my_service" } }
+          }
+        ],
+        "droppedAttributesCount": 0
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "my_span",
+            "version": "v1",
+            "attributes": [
+              {
+                "key": "scoped_span.attr",
+                "value": { "value": { "stringValue": "my_service" } }
+              }
+            ],
+            "droppedAttributesCount": 0
+          },
+          "spans": [
+            {
+              "traceId": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+              "spanId": [0, 0, 0, 0, 0, 0, 0, 1],
+              "traceState": "state",
+              "parentSpanId": [],
+              "name": "my_span",
+              "kind": 1,
+              "startTimeUnixNano": 1,
+              "endTimeUnixNano": 2,
+              "attributes": [
+                {
+                  "key": "attr1",
+                  "value": { "value": { "stringValue": "attr1_value" } }
+                }
+              ],
+              "droppedAttributesCount": 0,
+              "events": [
+                {
+                  "timeUnixNano": 1,
+                  "name": "event 1",
+                  "attributes": [],
+                  "droppedAttributesCount": 0
+                }
+              ],
+              "droppedEventsCount": 0,
+              "links": [],
+              "droppedLinksCount": 0,
+              "status": null
+            }
+          ],
+          "schemaUrl": "span.schema_url"
+        }
+      ],
+      "schemaUrl": "schema_url"
+    }
+  ]
+}

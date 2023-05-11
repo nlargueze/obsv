@@ -7,18 +7,26 @@ use std::{env, fs, path::PathBuf};
 use walkdir::WalkDir;
 
 fn main() -> Result<()> {
-    // release file
+    println!("cargo:rerun-if-changed=build.rs");
+
+    // version
     let otlp_version = env::var("OBSV_OTEL_PROTO_VERSION").unwrap_or("0.19.0".to_string());
     let otlp_version = otlp_version.strip_prefix('v').unwrap_or(&otlp_version);
-    let release_link = format!("https://github.com/open-telemetry/opentelemetry-proto/archive/refs/tags/v{otlp_version}.tar.gz");
-    println!("cargo:warning=downloading: {release_link}");
 
-    // download the zip
+    // files
     let out_dir = env::var("OUT_DIR")?;
     let out_dir = PathBuf::from(out_dir);
     let dl_file_name = PathBuf::from(format!("opentelemetry-proto-{otlp_version}.tar.gz"));
     let dl_file = out_dir.join(&dl_file_name);
+    // NB: if the specs are already downloaded, we assumed the bindings have been generated
+    if dl_file.exists() {
+        println!("cargo:warning=specs already downloaded -> skipped");
+        return Ok(());
+    }
 
+    // download the specs
+    let release_link = format!("https://github.com/open-telemetry/opentelemetry-proto/archive/refs/tags/v{otlp_version}.tar.gz");
+    println!("cargo:warning=downloading: {release_link}");
     let mut downloader = Downloader::builder()
         .download_folder(&out_dir)
         .parallel_requests(1)
@@ -45,11 +53,26 @@ fn main() -> Result<()> {
             protos.push(entry.path().to_owned());
         }
     }
+
     // /opentelemetry/proto
-    prost_build::Config::new()
+    tonic_build::configure()
         .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
         .type_attribute(".", "#[serde(rename_all = \"camelCase\")]")
-        .compile_protos(&protos, &[&target_dir])?;
+        // Span ID is a 16 bytes and the JSON MUST be serialized as a 16 bytes HEX value with no leading 0x
+        .field_attribute(
+            "opentelemetry.proto.trace.v1.Span.trace_id",
+            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+        )
+        // Span ID is a 8 bytes and the JSON MUST be serialized as a 8 bytes HEX value with no leading 0x
+        .field_attribute(
+            "opentelemetry.proto.trace.v1.Span.span_id",
+            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+        )
+        .field_attribute(
+            "opentelemetry.proto.trace.v1.Span.parent_span_id",
+            "#[serde(serialize_with = \"crate::json::serialize_id\")]",
+        )
+        .compile(&protos, &[&target_dir])?;
     println!("cargo:warning=generated rust bindings");
 
     Ok(())
