@@ -1,0 +1,25 @@
+{
+	"name": "api-mock",
+	"version": "1.0.0",
+	"description": "mock API",
+	"main": "src/index.ts",
+	"scripts": {
+		"start": "ts-node src/index.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@faker-js/faker": "^8.0.0",
+		"cors": "^2.8.5",
+		"express": "^4.18.2"
+	},
+	"devDependencies": {
+		"@types/cors": "^2.8.13",
+		"@types/express": "^4.17.17",
+		"@types/node": "^20.1.3",
+		"ts-node": "^10.9.1",
+		"tslib": "^2.5.0",
+		"typescript": "^5.0.4"
+	}
+}

@@ -20,7 +20,7 @@ async fn main() {
         .unwrap();
 }
 
-/// GRPC servoce
+/// GRPC service
 #[derive(Clone)]
 struct GrpcTraceService;
 

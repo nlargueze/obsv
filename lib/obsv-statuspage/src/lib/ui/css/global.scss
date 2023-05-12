@@ -1,0 +1,16 @@
+// Global styles
+@import '_colors.scss';
+@import '_sizes.scss';
+@import '_shadows.scss';
+@import '_typo.scss';
+
+:global(body) {
+	// background-color: #fafbfc;
+	background-color: var(--color-grey-50);
+	color: var(--color-grey-950);
+
+	@media (prefers-color-scheme: dark) {
+		background-color: var(--color-grey-900);
+		color: white;
+	}
+}

@@ -6,6 +6,6 @@ members = [
     "obsv-store",
     "obsv-report",
     "lib/obsv-notif",
-    "lib/obsv-status",
     "lib/obsv-otlp",
+    "lib/obsv-grafana",
 ]

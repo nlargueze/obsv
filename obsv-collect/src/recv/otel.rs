@@ -1,7 +1,5 @@
 //! OpenTelemetry receiver
 
-use opentelemetry_sdk::trace::Span;
-
 /// OpenTelemetry receiver
 pub struct OtelReceiver {}
 
