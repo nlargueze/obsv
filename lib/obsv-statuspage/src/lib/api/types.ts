@@ -12,10 +12,10 @@ export type Monitor = {
  * A monitor check
  */
 export type MonitorCheck = {
-	timestamp: Date,
+	timestamp: Date;
 	resp_time_ms: number | null;
-	ok: boolean,
-}
+	ok: boolean;
+};
 
 /**
  * An incident
@@ -48,7 +48,6 @@ export type IncidentUpdate = {
 	status: IncidentStatus;
 };
 
-
 /**
  * A notice (eg maintenance)
  */
@@ -65,7 +64,7 @@ export type Notice = {
  * Status
  */
 export type Status = {
-	monitors: Monitor[],
-	incidents: Incident[],
-	notices: Notice[],
-}
+	monitors: Monitor[];
+	incidents: Incident[];
+	notices: Notice[];
+};

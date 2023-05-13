@@ -2,6 +2,8 @@
 	import type { Status } from '$lib/api/types';
 	import Icon from '@iconify/svelte';
 	import BarChart, { type BarChartDataPoint } from '$lib/ui/charts/BarChart.svelte';
+	import LineChart, { type LineDataPoint } from '$lib/ui/charts/LineChart.svelte';
+	import IncidentCard from '$lib/ui/components/IncidentCard.svelte';
 	import dayjs from 'dayjs';
 
 	/** @type {import('./$types').PageData} */
@@ -10,9 +12,9 @@
 	};
 
 	// get the bar charts data
-	function getBarChartsData(id: string): BarChartDataPoint[] {
+	function getBarChartsData(monitor_id: string): BarChartDataPoint[] {
 		let monitor = data.status.monitors.find((m) => {
-			return m.id == id;
+			return m.id == monitor_id;
 		});
 		if (!monitor) {
 			return [];
@@ -40,6 +42,30 @@
 		return barChartsData;
 	}
 
+	// get the line charts data
+	function getLineChartsData(monitor_id: string): LineDataPoint[] {
+		let monitor = data.status.monitors.find((m) => {
+			return m.id == monitor_id;
+		});
+		if (!monitor) {
+			return [];
+		}
+
+		let lineChartsData: LineDataPoint[] = monitor.checks
+			.filter((check) => {
+				let minus_1day = dayjs().subtract(1, 'day').toDate();
+				return check.timestamp < new Date() && check.timestamp >= minus_1day && !check.resp_time_ms;
+			})
+			.map((check) => {
+				return {
+					date: check.timestamp,
+					value: check.resp_time_ms as number
+				};
+			});
+		console.log('X', lineChartsData);
+		return lineChartsData;
+	}
+
 	// // register an interval to update the page every X ms
 	// const interval_ms = 300_000;
 	// setInterval(function () {
@@ -61,13 +87,7 @@
 		<main>
 			<section class="incidents">
 				{#each data.status.incidents as incident}
-					<div class="incident">
-						<Icon icon="material-symbols:error-rounded" class="icon" height={48} />
-						<div class="content">
-							<span class="title">{incident.title}</span>
-							<span class="descr">{incident.description}</span>
-						</div>
-					</div>
+					<IncidentCard {incident} />
 				{/each}
 			</section>
 
@@ -81,10 +101,12 @@
 							</div>
 							<div>100% uptime</div>
 						</header>
-						<div class="bars">
+						<div class="bar-chart">
 							<BarChart data={getBarChartsData(monitor.id)} />
 						</div>
-						<div class="serie">serie</div>
+						<div class="line-chart">
+							<LineChart data={getLineChartsData(monitor.id)} />
+						</div>
 					</div>
 				{/each}
 			</section>
@@ -128,7 +150,7 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		gap: var(--size-24);
+		gap: var(--size-12);
 
 		:global(.icon) {
 			font-size: var(--size-48);
@@ -140,46 +162,14 @@
 	}
 
 	.incidents {
-		margin-top: var(--size-32);
-
-		.incident {
-			background-color: white;
-			padding: var(--size-32);
-			border-radius: var(--border-radius-10);
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			margin-bottom: var(--size-24);
-
-			:global(.icon) {
-				color: var(--color-red-500);
-				margin-right: var(--size-24);
-			}
-
-			.content {
-				display: flex;
-				flex-direction: column;
-				gap: var(--size-16);
-
-				.descr {
-					line-height: var(--line-height-lg);
-				}
-			}
-
-			@media (prefers-color-scheme: dark) {
-				background-color: var(--color-grey-800);
-				color: white;
-
-				.content {
-					.descr {
-						color: var(--color-grey-200);
-					}
-				}
-			}
-		}
+		margin-top: var(--size-48);
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-12);
 	}
 
 	.monitors {
+		margin-top: var(--size-32);
 		display: flex;
 		flex-direction: column;
 
@@ -205,11 +195,11 @@
 				}
 			}
 
-			.bars {
+			.bar-chart {
 				padding: var(--size-12) 0;
 			}
 
-			.serie {
+			.line-chart {
 				padding: var(--size-12) 0;
 			}
 

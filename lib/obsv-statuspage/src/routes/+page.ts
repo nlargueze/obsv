@@ -8,7 +8,7 @@ export async function load({ fetch }) {
 	process(status);
 
 	return {
-		status,
+		status
 	};
 }
 
@@ -17,12 +17,12 @@ export async function load({ fetch }) {
  */
 function process(status: Status): {
 	monitors: {
-		a: number,
-	}
+		a: number;
+	};
 } {
 	return {
 		monitors: {
-			a: 1,
+			a: 1
 		}
 	};
 }

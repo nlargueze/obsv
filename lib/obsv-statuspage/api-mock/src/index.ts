@@ -3,7 +3,7 @@ import cors from 'cors';
 import db from './db';
 
 const app = express();
-app.use(cors())
+app.use(cors());
 const port = 3000;
 
 app.get('/', (req: Request, res: Response) => {
