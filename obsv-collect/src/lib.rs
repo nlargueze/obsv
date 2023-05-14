@@ -11,6 +11,7 @@
 //! - **http**: HTTP server and client
 
 use expt::Exporter;
+use obsv_core::Data;
 use proc::Processor;
 use recv::Receiver;
 
@@ -54,58 +55,65 @@ impl Server {
     }
 }
 
-type Data = u8;
-
 impl Server {
     /// Starts the server
     pub async fn start(self) {
         let (recv_tx, mut recv_rx) = tokio::sync::mpsc::unbounded_channel::<Data>();
-
-        let mut tasks = vec![];
         for receiver in self.receivers {
-            let task_recv = tokio::spawn({
+            // NB: each receiver runs in its own task
+            tokio::spawn({
                 let tx = recv_tx.clone();
                 async move {
-                    receiver.start().await;
+                    receiver.start(tx).await;
                 }
             });
-            tasks.push(task_recv);
         }
 
-        // processors + exporters
-        let task_proc = tokio::spawn(async move {
-            let data = recv_rx.recv().await;
-            // NB: we spawn a new task to process and export each received data
-            tokio::spawn(async {
-                for processor in self.processors {
-                    processor.process().await;
+        // processing
+        // there is a unique task to process all the data
+        let (proc_tx, mut proc_rx) = tokio::sync::broadcast::channel(100);
+        tokio::spawn({
+            let mut data = match recv_rx.recv().await {
+                Some(d) => d,
+                None => {
+                    log::error!("Closed channel");
+                    panic!("Closed channel")
                 }
-
-                // NB: we spawn a new tasks for each exporter
-                for exporter in self.exporters {
-                    tokio::spawn(async {
-                        exporter.export(data).await;
-                    });
+            };
+            async move {
+                log::trace!("Processing data: {:?}", data);
+                for processor in &self.processors {
+                    data = processor.process(data).await;
                 }
-                // send to exporters
-                proc_tx.clone().send(0);
-            });
+                match proc_tx.send(data) {
+                    Ok(_ok) => {}
+                    Err(_err) => {
+                        log::error!("Closed channel");
+                        panic!("Closed channel")
+                    }
+                };
+            }
         });
-        tasks.push(task_proc);
 
-        // exporters
+        // exporting
         for exporter in self.exporters {
-            tasks.push(tokio::spawn({
-                let mut proc_rx = proc_tx.subscribe();
+            // NB: each receiver runs in its own task
+            tokio::spawn({
+                let data = match proc_rx.recv().await {
+                    Ok(d) => d,
+                    Err(_err) => {
+                        log::error!("Closed channel");
+                        panic!("Closed channel")
+                    }
+                };
                 async move {
-                    let data = proc_rx.recv().await.unwrap();
+                    exporter.export(data).await;
                 }
-            }));
+            });
         }
 
-        //join all tasks
-        for task in tasks {
-            task.await.unwrap();
+        loop {
+            std::hint::spin_loop();
         }
     }
 }

@@ -1,15 +1,21 @@
 //! OpenTelemetry connector
 
-use obsv_otlp::proto::{
-    collector::trace::v1::ExportTraceServiceRequest,
-    common::v1::{any_value::Value, AnyValue, KeyValue},
-};
+use obsv_otlp::proto::common::v1::{any_value::Value, AnyValue, KeyValue};
+
+pub use obsv_otlp::proto::collector::trace::v1::ExportTraceServiceRequest;
 
 use crate::{
     attr::{Attr, AttrValue},
     event::Event,
     trace::{Span, Spans},
+    Data,
 };
+
+impl From<ExportTraceServiceRequest> for Data {
+    fn from(value: ExportTraceServiceRequest) -> Self {
+        Data::Spans(value.into())
+    }
+}
 
 impl From<ExportTraceServiceRequest> for Spans {
     fn from(req: ExportTraceServiceRequest) -> Self {
@@ -41,9 +47,14 @@ impl From<ExportTraceServiceRequest> for Spans {
 
 impl From<obsv_otlp::proto::trace::v1::Span> for Span {
     fn from(span: obsv_otlp::proto::trace::v1::Span) -> Self {
+        log::trace!("Converting OTLP span to core span: {span:?}");
         let trace_id = u128::from_be_bytes(span.trace_id.try_into().unwrap());
         let span_id = u64::from_be_bytes(span.span_id.try_into().unwrap());
-        let parent_span_id = u64::from_be_bytes(span.parent_span_id.try_into().unwrap());
+        let parent_span_id = if !span.parent_span_id.is_empty() {
+            u64::from_be_bytes(span.parent_span_id.try_into().unwrap())
+        } else {
+            0
+        };
         let name = span.name;
         let start = span.start_time_unix_nano;
         let end = span.end_time_unix_nano;
