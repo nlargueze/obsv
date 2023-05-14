@@ -8,6 +8,7 @@ repository = "https://github.com/nlargueze/obsv"
 
 [dependencies]
 hex = "0.4.3"
+hyper = { version = "0.14.26", features = ["full"] }
 prost = "0.11.9"
 serde = { version = "1.0.162", features = ["derive"] }
 tonic = { version = "0.9.2" }

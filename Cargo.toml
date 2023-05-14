@@ -4,7 +4,6 @@ members = [
     "obsv-core",
     "obsv-collect",
     "obsv-monitor",
-    "obsv-store",
     "obsv-report",
     "lib/obsv-notif",
     "lib/obsv-otlp",

@@ -15,6 +15,7 @@ flowchart LR
     in_events[Events, Analytics]
     in_services[Services]
 
+    out_api[API]
     out_dashboard[Dashboard]
     out_status[Status page]
     out_notifs[Notifications]
@@ -35,8 +36,9 @@ flowchart LR
     db --> reporter
     monitor --> db
 
-    reporter --> |:5001| out_dashboard
-    reporter --> |:5002| out_status
+    reporter --> |:5001| out_api
+    reporter --> |:5002| out_dashboard
+    reporter --> |:5003| out_status
     reporter --> |email, etc| out_notifs
 ```
 
@@ -46,7 +48,6 @@ flowchart LR
 - `obsv-core`: core structures and utilities
 - `obsv-collect`: server to collect data (Otel)
 - `obsv-monitor`: service to monitor services
-- `obsv-store`: internal storage
 - `obsv-report`: server to serve data, pages, and notify
 - `lib/**`: shared libraries
 
