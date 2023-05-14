@@ -5,20 +5,14 @@
 use async_trait::async_trait;
 use obsv_core::Data;
 
+pub mod id;
+
 /// Processor
 #[async_trait]
 pub trait Processor: Send + Sync {
+    /// Returns the processor ID
+    fn id(&self) -> String;
+
     /// Processes the data
     async fn process(&self, data: Data) -> Data;
-}
-
-/// Identity processor
-#[derive(Debug, Clone)]
-pub struct PassThroughProcessor {}
-
-#[async_trait]
-impl Processor for PassThroughProcessor {
-    async fn process(&self, data: Data) -> Data {
-        data
-    }
 }

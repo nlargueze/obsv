@@ -11,8 +11,9 @@ name = "collector"
 path = "src/bin/collector.rs"
 
 [features]
-default = ["http"]
+default = ["http", "grpc"]
 http = ["dep:hyper", "dep:serde_json"]
+grpc = ["dep:tonic"]
 
 [dependencies]
 async-trait = "0.1.68"
@@ -22,3 +23,4 @@ log = "0.4.17"
 obsv-core = { version = "0.1.0", path = "../obsv-core" }
 serde_json = { version = "1.0.96", optional = true }
 tokio = { version = "1.28.1", features = ["full"] }
+tonic = { version = "0.9.2", optional = true }

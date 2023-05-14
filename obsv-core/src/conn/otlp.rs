@@ -1,8 +1,11 @@
 //! OpenTelemetry connector
 
-use obsv_otlp::proto::common::v1::{any_value::Value, AnyValue, KeyValue};
+use obsv_otlp::proto::{
+    collector::trace::v1::ExportTraceServiceRequest,
+    common::v1::{any_value::Value, AnyValue, KeyValue},
+};
 
-pub use obsv_otlp::proto::collector::trace::v1::ExportTraceServiceRequest;
+pub use obsv_otlp::*;
 
 use crate::{
     attr::{Attr, AttrValue},
@@ -95,9 +98,7 @@ impl From<obsv_otlp::proto::trace::v1::span::Event> for Event {
 impl From<Value> for AttrValue {
     fn from(value: Value) -> Self {
         match value {
-            obsv_otlp::proto::common::v1::any_value::Value::StringValue(s) => {
-                AttrValue::Str(s.to_string())
-            }
+            obsv_otlp::proto::common::v1::any_value::Value::StringValue(s) => AttrValue::Str(s),
             obsv_otlp::proto::common::v1::any_value::Value::BoolValue(b) => AttrValue::Bool(b),
             obsv_otlp::proto::common::v1::any_value::Value::IntValue(i) => AttrValue::Int(i.into()),
             obsv_otlp::proto::common::v1::any_value::Value::DoubleValue(d) => AttrValue::Float(d),

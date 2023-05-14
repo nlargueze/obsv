@@ -8,7 +8,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Method, Request, Response, Server, StatusCode,
 };
-use obsv_core::{conn::otlp::ExportTraceServiceRequest, Data};
+use obsv_core::{conn::otlp::proto::collector::trace::v1::ExportTraceServiceRequest, Data};
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::Receiver;
@@ -31,16 +31,21 @@ impl HttpReceiver {
 
 #[async_trait]
 impl Receiver for HttpReceiver {
-    /// Start the HTTP OTLP receiver
+    fn id(&self) -> String {
+        "receiver_http".to_string()
+    }
+
     async fn start(&self, tx: UnboundedSender<Data>) {
         let make_svc = make_service_fn(|conn: &AddrStream| {
+            let id = self.id();
             let addr = conn.remote_addr();
             let tx = tx.clone();
             async {
                 // service_fn converts our function into a `Service`
                 Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
+                    let id = id.clone();
                     let tx = tx.clone();
-                    async move { handle_req(tx, req).await }
+                    async move { handle_req(id, tx, req).await }
                 }))
             }
         });
@@ -55,12 +60,15 @@ impl Receiver for HttpReceiver {
 
 /// Handles the request
 pub async fn handle_req(
+    id: String,
     tx: UnboundedSender<Data>,
     req: Request<Body>,
 ) -> Result<Response<Body>, Infallible> {
+    log::trace!("[{}] Received data", id);
     match (req.method(), req.uri().path()) {
         (&Method::GET, "") => Ok(Response::new("Hello, World".into())),
         (&Method::GET, "/up") => Ok(Response::new("UP".into())),
+        // Path to HTTP trace collector
         (&Method::POST, "/v1/traces") => {
             log::trace!("Received HTTP POST /v1/traces");
             // parse the trace
