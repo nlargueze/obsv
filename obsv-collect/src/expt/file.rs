@@ -29,12 +29,8 @@ impl FileExporter {
 
 #[async_trait]
 impl Exporter for FileExporter {
-    fn id(&self) -> String {
-        "exporter_file".to_string()
-    }
-
     async fn export(&self, data: Data) {
-        log::trace!("[{}] Exporting data: {data:?}", self.id());
+        log::trace!("exporting");
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)

@@ -50,7 +50,7 @@ impl From<ExportTraceServiceRequest> for Spans {
 
 impl From<obsv_otlp::proto::trace::v1::Span> for Span {
     fn from(span: obsv_otlp::proto::trace::v1::Span) -> Self {
-        log::trace!("Converting OTLP span to core span: {span:?}");
+        // log::trace!("Converting OTLP span to core span: {span:?}");
         let trace_id = u128::from_be_bytes(span.trace_id.try_into().unwrap());
         let span_id = u64::from_be_bytes(span.span_id.try_into().unwrap());
         let parent_span_id = if !span.parent_span_id.is_empty() {

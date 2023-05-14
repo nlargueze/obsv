@@ -11,12 +11,8 @@ pub struct PassThroughProcessor {}
 
 #[async_trait]
 impl Processor for PassThroughProcessor {
-    fn id(&self) -> String {
-        "processor_id".to_string()
-    }
-
     async fn process(&self, data: Data) -> Data {
-        log::trace!("[{}] Processing data: {data:?}", self.id());
+        log::trace!("processing");
         data
     }
 }

@@ -17,12 +17,8 @@ impl StdoutExporter {
 
 #[async_trait]
 impl Exporter for StdoutExporter {
-    fn id(&self) -> String {
-        "exporter_stdout".to_string()
-    }
-
     async fn export(&self, data: Data) {
-        log::trace!("[{}] Exporting data: {data:?}", self.id());
+        log::trace!("exporting");
         eprintln!("{:#?}", data);
     }
 }

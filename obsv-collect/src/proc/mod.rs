@@ -10,9 +10,6 @@ pub mod id;
 /// Processor
 #[async_trait]
 pub trait Processor: Send + Sync {
-    /// Returns the processor ID
-    fn id(&self) -> String;
-
     /// Processes the data
     async fn process(&self, data: Data) -> Data;
 }

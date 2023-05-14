@@ -11,9 +11,6 @@ pub mod stdout;
 /// Exporter
 #[async_trait]
 pub trait Exporter: Send + Sync {
-    /// Returns the processor ID
-    fn id(&self) -> String;
-
     /// Exports data
     async fn export(&self, data: Data);
 }

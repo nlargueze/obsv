@@ -8,7 +8,8 @@
 //!  
 //! # Features
 //!
-//! - **http**: HTTP server and client
+//! - **http**: HTTP server
+//! - **grpc**: GRPC server
 
 use expt::Exporter;
 use obsv_core::Data;
@@ -82,12 +83,12 @@ impl Server {
                 loop {
                     let mut data = match recv_rx.recv().await {
                         Some(d) => {
-                            log::trace!("Processing data");
+                            log::trace!("received data");
                             d
                         }
                         None => {
-                            log::error!("Closed receiver channel");
-                            panic!("Closed receiver channel")
+                            log::error!("closed receiver channel");
+                            panic!("closed receiver channel")
                         }
                     };
                     for processor in &self.processors {
@@ -96,8 +97,8 @@ impl Server {
                     match proc_tx.send(data) {
                         Ok(_ok) => {}
                         Err(_err) => {
-                            log::error!("Closed processing channel");
-                            panic!("Closed processing channel")
+                            log::error!("closed processing channel");
+                            panic!("closed processing channel")
                         }
                     };
                 }
@@ -108,16 +109,20 @@ impl Server {
         // exporting
         // each exporter runs in its own task
         for exporter in self.exporters {
-            let mut proc_rx = proc_tx.subscribe();
-            let task = tokio::spawn({
-                let data = match proc_rx.recv().await {
-                    Ok(d) => d,
-                    Err(_err) => {
-                        log::error!("Closed processing channel");
-                        panic!("Closed processing channel")
-                    }
-                };
-                async move {
+            let proc_tx = proc_tx.clone();
+            let task = tokio::spawn(async move {
+                let mut proc_rx = proc_tx.subscribe();
+                loop {
+                    let data = match proc_rx.recv().await {
+                        Ok(d) => {
+                            log::trace!("processed data");
+                            d
+                        }
+                        Err(_err) => {
+                            log::error!("closed processing channel");
+                            panic!("closed processing channel")
+                        }
+                    };
                     exporter.export(data).await;
                 }
             });

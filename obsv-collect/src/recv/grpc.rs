@@ -33,15 +33,8 @@ impl GrpcReceiver {
 
 #[async_trait]
 impl Receiver for GrpcReceiver {
-    fn id(&self) -> String {
-        "receiver_grpc".to_string()
-    }
-
     async fn start(&self, tx: UnboundedSender<Data>) {
-        let service = trace_service_server::TraceServiceServer::new(TraceHandler::new(
-            self.id().as_str(),
-            tx,
-        ));
+        let service = trace_service_server::TraceServiceServer::new(TraceHandler::new(tx));
         tonic::transport::Server::builder()
             .add_service(service)
             .serve(self.addr)
@@ -53,18 +46,13 @@ impl Receiver for GrpcReceiver {
 /// GRPC service
 #[derive(Clone)]
 struct TraceHandler {
-    /// ID
-    id: String,
     /// Channel sender
     tx: UnboundedSender<Data>,
 }
 
 impl TraceHandler {
-    pub fn new(id: &str, tx: UnboundedSender<Data>) -> Self {
-        Self {
-            id: id.to_string(),
-            tx,
-        }
+    pub fn new(tx: UnboundedSender<Data>) -> Self {
+        Self { tx }
     }
 }
 
@@ -74,7 +62,7 @@ impl trace_service_server::TraceService for TraceHandler {
         &self,
         req: Request<ExportTraceServiceRequest>,
     ) -> Result<Response<ExportTraceServiceResponse>, tonic::Status> {
-        log::trace!("[{}] Received data", self.id);
+        log::trace!("received GRPC request");
 
         // sending to channel
         let (_, _, req) = req.into_parts();

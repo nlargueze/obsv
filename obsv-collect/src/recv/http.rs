@@ -31,21 +31,15 @@ impl HttpReceiver {
 
 #[async_trait]
 impl Receiver for HttpReceiver {
-    fn id(&self) -> String {
-        "receiver_http".to_string()
-    }
-
     async fn start(&self, tx: UnboundedSender<Data>) {
         let make_svc = make_service_fn(|conn: &AddrStream| {
-            let id = self.id();
             let addr = conn.remote_addr();
             let tx = tx.clone();
             async {
                 // service_fn converts our function into a `Service`
                 Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
-                    let id = id.clone();
                     let tx = tx.clone();
-                    async move { handle_req(id, tx, req).await }
+                    async move { handle_req(tx, req).await }
                 }))
             }
         });
@@ -60,17 +54,15 @@ impl Receiver for HttpReceiver {
 
 /// Handles the request
 pub async fn handle_req(
-    id: String,
     tx: UnboundedSender<Data>,
     req: Request<Body>,
 ) -> Result<Response<Body>, Infallible> {
-    log::trace!("[{}] Received data", id);
+    log::trace!("received HTTP request");
     match (req.method(), req.uri().path()) {
         (&Method::GET, "") => Ok(Response::new("Hello, World".into())),
         (&Method::GET, "/up") => Ok(Response::new("UP".into())),
         // Path to HTTP trace collector
         (&Method::POST, "/v1/traces") => {
-            log::trace!("Received HTTP POST /v1/traces");
             // parse the trace
             let body_bytes = hyper::body::to_bytes(req.into_body()).await.unwrap();
             let otlp_req: ExportTraceServiceRequest = match serde_json::from_slice(&body_bytes) {
@@ -90,8 +82,6 @@ pub async fn handle_req(
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from(err.to_string()))
                     .unwrap());
-            } else {
-                println!("Data sent from HTTP to processor");
             }
 
             // ok
