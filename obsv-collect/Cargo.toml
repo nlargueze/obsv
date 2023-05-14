@@ -6,5 +6,17 @@ description = "Data collector"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nlargueze/obsv"
 
+[[bin]]
+name = "collector"
+path = "src/bin/collector.rs"
+
+[features]
+default = ["http"]
+http = ["dep:hyper", "dep:serde_json"]
+
 [dependencies]
-opentelemetry_sdk = { version = "0.19.0" }
+async-trait = "0.1.68"
+hyper = { version = "0.14.26", features = ["full"], optional = true }
+obsv-core = { version = "0.1.0", path = "../obsv-core" }
+serde_json = { version = "1.0.96", optional = true }
+tokio = { version = "1.28.1", features = ["full"] }

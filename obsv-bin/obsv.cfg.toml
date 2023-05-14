@@ -1,0 +1,9 @@
+[[monitoring.monitors.http]]
+id = "google"
+name = "Google monitor"
+frequency = "5s"
+uri = "http://www.google.com"
+method = "GET"
+
+[monitoring.exporters.stdout]
+id = "stdout"

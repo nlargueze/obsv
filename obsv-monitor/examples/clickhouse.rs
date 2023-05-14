@@ -26,7 +26,7 @@ async fn real_main() {
         .monitor(monitor_google)
         .exporter(exporter_stdout)
         .exporter(exporter_ch)
-        .start_service()
+        .start()
         .await
         .unwrap();
 }

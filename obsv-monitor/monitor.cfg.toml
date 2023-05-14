@@ -1,0 +1,13 @@
+[[monitors.http]]
+id = "google"
+name = "Google monitor"
+frequency = "5s"
+uri = "http://www.google.com"
+method = "GET"
+
+[exporters.stdout]
+id = "stdout"
+
+# [[exporters.file]]
+# id = "file"
+# path = "./logs.txt"

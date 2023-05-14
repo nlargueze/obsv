@@ -7,13 +7,34 @@ use std::{
 };
 
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use time::macros::format_description;
 
 use crate::{error::Error, monitor::MonitorCheck};
 
 use super::Exporter;
 
+/// File exporter config
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FileExporterConfig {
+    /// ID
+    pub id: String,
+    /// Path
+    pub path: String,
+}
+
+impl FileExporterConfig {
+    /// Returns the [Exporter] instance
+    pub fn to_exporter(&self) -> Result<FileExporter, Error> {
+        Ok(FileExporter {
+            id: self.id.clone(),
+            path: PathBuf::from(&self.path),
+        })
+    }
+}
+
 /// File exporter
+#[derive(Debug)]
 pub struct FileExporter {
     /// ID
     pub id: String,

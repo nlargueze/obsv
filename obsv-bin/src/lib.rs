@@ -1,0 +1,3 @@
+//! Executables
+
+pub mod cfg;

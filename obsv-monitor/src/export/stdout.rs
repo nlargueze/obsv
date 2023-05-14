@@ -1,11 +1,26 @@
 //! Stdout exporter
 
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use time::macros::format_description;
 
 use crate::{error::Error, monitor::MonitorCheck};
 
 use super::Exporter;
+
+/// Stdout exporter config
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StdoutExporterConfig {
+    /// ID
+    pub id: String,
+}
+
+impl StdoutExporterConfig {
+    /// Returns the [Exporter] instance
+    pub fn to_exporter(&self) -> Result<StdoutExporter<StdoutDefaultFormatter>, Error> {
+        Ok(StdoutExporter::new(&self.id))
+    }
+}
 
 /// Stdout exporter
 ///

@@ -16,7 +16,7 @@ async fn main() {
     MonitoringService::new()
         .monitor(monitor_google)
         .exporter(exporter_stdout)
-        .start_service()
+        .start()
         .await
         .unwrap();
 }

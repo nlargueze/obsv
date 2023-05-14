@@ -1,9 +1,13 @@
 //! Receiver
 
-pub mod otel;
+use async_trait::async_trait;
+
+#[cfg(feature = "http")]
+pub mod http;
 
 /// Receiver
-pub trait Receiver {
+#[async_trait]
+pub trait Receiver: Send + Sync {
     /// Starts receiving metrics/traces/logs/etc data
-    fn start();
+    async fn start(&self);
 }

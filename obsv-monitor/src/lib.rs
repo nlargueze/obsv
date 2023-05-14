@@ -13,6 +13,7 @@ use crate::monitor::Monitor;
 use export::Exporter;
 use monitor::MonitorCheck;
 
+pub mod cfg;
 pub mod error;
 pub mod export;
 pub mod monitor;
@@ -40,10 +41,20 @@ impl MonitoringService {
         self
     }
 
+    /// Adds a monitor
+    pub fn add_monitor(&mut self, monitor: impl Monitor + 'static) {
+        self.monitors.push(Box::new(monitor));
+    }
+
     /// Sets an exporter
     pub fn exporter(mut self, exporter: impl Exporter + 'static) -> Self {
         self.exporters.push(Box::new(exporter));
         self
+    }
+
+    /// Adds an exporter
+    pub fn add_exporter(&mut self, exporter: impl Exporter + 'static) {
+        self.exporters.push(Box::new(exporter));
     }
 
     /// Performs a test for all services
@@ -56,9 +67,9 @@ impl MonitoringService {
         checks
     }
 
-    /// Starts a service which checks all monitors at regular intervals
+    /// Starts the service
     #[cfg(feature = "rt-tokio")]
-    pub async fn start_service(self) -> Result<(), Error> {
+    pub async fn start(self) -> Result<(), Error> {
         use duration_string::DurationString;
         use tokio::sync::broadcast;
 

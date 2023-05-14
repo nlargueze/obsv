@@ -3,13 +3,53 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
+use duration_string::DurationString;
 use hyper::{Body, Client, Uri};
+use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
 use super::{Monitor, MonitorCheck};
 
 pub use hyper::Method;
+
+/// HTTP monitor config
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HttpMonitorConfig {
+    /// ID
+    pub id: String,
+    /// Friendly name
+    pub name: String,
+    /// Frequency
+    pub frequency: String,
+    /// Uri
+    pub uri: String,
+    /// Method
+    pub method: Option<String>,
+    /// Headers
+    pub headers: Option<Vec<(String, String)>>,
+}
+
+impl HttpMonitorConfig {
+    /// Returns the [Monitor] instance
+    pub fn to_monitor(&self) -> Result<HttpMonitor, Error> {
+        Ok(HttpMonitor {
+            id: self.id.to_string(),
+            name: self.name.clone(),
+            frequency: DurationString::try_from(self.frequency.clone())
+                .map_err(|err| Error::new(&err))?
+                .into(),
+            uri: self.uri.parse()?,
+            method: self
+                .method
+                .clone()
+                .as_ref()
+                .unwrap_or(&"GET".to_string())
+                .parse()?,
+            headers: self.headers.clone().unwrap_or(vec![]),
+        })
+    }
+}
 
 /// HTTP monitor
 #[derive(Debug)]
