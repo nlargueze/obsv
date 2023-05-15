@@ -5,8 +5,7 @@ use std::net::SocketAddr;
 use async_trait::async_trait;
 use obsv_core::{
     conn::otlp::proto::collector::trace::v1::{
-        trace_service_server, ExportTracePartialSuccess, ExportTraceServiceRequest,
-        ExportTraceServiceResponse,
+        trace_service_server, ExportTraceServiceRequest, ExportTraceServiceResponse,
     },
     Data,
 };
@@ -51,6 +50,7 @@ struct TraceHandler {
 }
 
 impl TraceHandler {
+    /// Creates a new [TraceHandler]
     pub fn new(tx: UnboundedSender<Data>) -> Self {
         Self { tx }
     }
@@ -68,18 +68,13 @@ impl trace_service_server::TraceService for TraceHandler {
         let (_, _, req) = req.into_parts();
         let data: Data = Data::Spans(req.into());
         match self.tx.send(data) {
-            Ok(_ok) => Ok(Response::new(ExportTraceServiceResponse {
-                partial_success: None,
-            })),
+            Ok(_ok) => {}
             Err(err) => {
-                log::error!("Error sending data to channel");
-                return Ok(Response::new(ExportTraceServiceResponse {
-                    partial_success: Some(ExportTracePartialSuccess {
-                        rejected_spans: 0,
-                        error_message: err.to_string(),
-                    }),
-                }));
+                log::error!("Error sending data to channel: {err}");
             }
         }
+        Ok(Response::new(ExportTraceServiceResponse {
+            partial_success: None,
+        }))
     }
 }

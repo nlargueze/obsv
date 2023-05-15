@@ -1,6 +1,7 @@
 //! Events
 
 use serde::{Deserialize, Serialize};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 use crate::attr::{Attr, Attrs};
 
@@ -25,6 +26,23 @@ pub struct Event {
     pub message: String,
     /// Attributes
     pub attrs: Attrs,
+}
+
+impl std::fmt::Display for Event {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let dt = OffsetDateTime::from_unix_timestamp_nanos(self.timestamp as i128)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
+
+        write!(
+            f,
+            "[{}] [{}] ({}) {} || {}",
+            dt.format(&Rfc3339).unwrap(),
+            self.id,
+            self.kind,
+            self.message,
+            self.attrs,
+        )
+    }
 }
 
 impl Event {

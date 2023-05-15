@@ -10,6 +10,7 @@ use super::Exporter;
 pub struct StdoutExporter {}
 
 impl StdoutExporter {
+    /// Creates a new [StdoutExporter]
     pub fn new() -> Self {
         StdoutExporter::default()
     }
@@ -17,8 +18,10 @@ impl StdoutExporter {
 
 #[async_trait]
 impl Exporter for StdoutExporter {
-    async fn export(&self, data: Data) {
+    async fn export(&self, data: Vec<Data>) {
         log::trace!("exporting");
-        eprintln!("{:#?}", data);
+        for d in data {
+            eprintln!("{d}");
+        }
     }
 }

@@ -15,11 +15,22 @@ pub mod trace;
 pub enum Data {
     Spans(trace::Spans),
     /// Log
-    Log(log::Log),
-    // /// Metric
-    // Metric(metric::Metric),
+    Logs(log::Logs),
+    /// Metric
+    Metrics(metric::Metrics),
     /// Event
     Event(event::Event),
+}
+
+impl std::fmt::Display for Data {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Data::Spans(spans) => write!(f, "{spans}"),
+            Data::Metrics(metrics) => write!(f, "{metrics}"),
+            Data::Logs(logs) => write!(f, "{logs}"),
+            Data::Event(event) => write!(f, "[EVENT] {event}"),
+        }
+    }
 }
 
 #[cfg(test)]

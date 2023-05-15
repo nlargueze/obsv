@@ -5,11 +5,15 @@
 use async_trait::async_trait;
 use obsv_core::Data;
 
+pub mod batch;
+pub mod filter;
 pub mod id;
 
 /// Processor
 #[async_trait]
 pub trait Processor: Send + Sync {
     /// Processes the data
-    async fn process(&self, data: Data) -> Data;
+    ///
+    /// The data is returned once processed, or None if the data processed latter
+    async fn process(&mut self, data: Vec<Data>) -> Option<Vec<Data>>;
 }

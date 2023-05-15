@@ -12,5 +12,5 @@ pub mod stdout;
 #[async_trait]
 pub trait Exporter: Send + Sync {
     /// Exports data
-    async fn export(&self, data: Data);
+    async fn export(&self, data: Vec<Data>);
 }

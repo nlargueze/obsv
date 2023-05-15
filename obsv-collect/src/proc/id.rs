@@ -11,8 +11,8 @@ pub struct PassThroughProcessor {}
 
 #[async_trait]
 impl Processor for PassThroughProcessor {
-    async fn process(&self, data: Data) -> Data {
-        log::trace!("processing");
-        data
+    async fn process(&mut self, data: Vec<Data>) -> Option<Vec<Data>> {
+        log::trace!("id processing");
+        Some(data)
     }
 }

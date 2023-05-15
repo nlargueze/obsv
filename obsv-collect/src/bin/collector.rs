@@ -3,7 +3,7 @@
 use obsv_collect::{
     expt::{file::FileExporter, stdout::StdoutExporter},
     recv::{grpc::GrpcReceiver, http::HttpReceiver},
-    Server,
+    CollService,
 };
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() {
     eprintln!("[collector] exporter: stdout");
     eprintln!("[collector] exporter: file ({})", file.display());
 
-    Server::new()
+    CollService::new()
         .receiver(http_receiver)
         .receiver(grpc_receiver)
         .exporter(stdout_exporter)

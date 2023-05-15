@@ -1,10 +1,6 @@
 //! Collector
 //!
-//! The collector is the server responsible for receiving, processing, and exporting metrics, traces, logs, and other data.
-//!
-//! The collector provides:
-//! - a HTTP API, which mimics the OpenTelemetry API
-//! - a gRPC API, which mimics the OpenTelemetry API
+//! The collector is the service responsible for receiving, processing, and exporting metrics, traces, logs, and other data.
 //!  
 //! # Features
 //!
@@ -20,9 +16,9 @@ pub mod expt;
 pub mod proc;
 pub mod recv;
 
-// Server
+// Collector service
 #[derive(Default)]
-pub struct Server {
+pub struct CollService {
     /// Receivers
     receivers: Vec<Box<dyn Receiver>>,
     /// Processors
@@ -31,7 +27,7 @@ pub struct Server {
     exporters: Vec<Box<dyn Exporter>>,
 }
 
-impl Server {
+impl CollService {
     /// Instantiates a new server
     pub fn new() -> Self {
         Self::default()
@@ -56,32 +52,30 @@ impl Server {
     }
 }
 
-impl Server {
-    /// Starts the server
-    pub async fn start(self) {
+impl CollService {
+    /// Starts the service
+    pub async fn start(mut self) {
         let mut tasks = vec![];
 
+        // NB: each receiver runs in its own task, which sends each received data for processing
         let (recv_tx, mut recv_rx) = tokio::sync::mpsc::unbounded_channel::<Data>();
         for receiver in self.receivers {
-            // NB: each receiver runs in its own task
-            let task = tokio::spawn({
+            tasks.push(tokio::spawn({
                 let tx = recv_tx.clone();
                 async move {
                     receiver.start(tx).await;
                 }
-            });
-            tasks.push(task);
+            }));
         }
 
-        // processing
-        // there is a unique task to process all the data received from the receiver
-        let (proc_tx, _proc_rx) = tokio::sync::broadcast::channel(100);
-        let task = tokio::spawn({
+        // NB: there is a unique task waiting to receive a signal
+        let (proc_tx, _proc_rx) = tokio::sync::broadcast::channel::<Vec<Data>>(100);
+        tasks.push(tokio::spawn({
             let proc_tx = proc_tx.clone();
             async move {
                 // => we receive data from the receiver channel
                 loop {
-                    let mut data = match recv_rx.recv().await {
+                    let data = match recv_rx.recv().await {
                         Some(d) => {
                             log::trace!("received data");
                             d
@@ -91,26 +85,34 @@ impl Server {
                             panic!("closed receiver channel")
                         }
                     };
-                    for processor in &self.processors {
-                        data = processor.process(data).await;
-                    }
-                    match proc_tx.send(data) {
-                        Ok(_ok) => {}
-                        Err(_err) => {
-                            log::error!("closed processing channel");
-                            panic!("closed processing channel")
+                    let mut processed_data = vec![data];
+                    'loop_processors: for processor in &mut self.processors {
+                        processed_data = match processor.process(processed_data).await {
+                            Some(d) => d,
+                            None => {
+                                // NB: nothing is returned, so we skip the processing chain
+                                processed_data = vec![];
+                                break 'loop_processors;
+                            }
                         }
-                    };
+                    }
+                    if !processed_data.is_empty() {
+                        match proc_tx.send(processed_data) {
+                            Ok(_ok) => {}
+                            Err(_err) => {
+                                log::error!("closed processing channel");
+                                panic!("closed processing channel")
+                            }
+                        };
+                    }
                 }
             }
-        });
-        tasks.push(task);
+        }));
 
-        // exporting
-        // each exporter runs in its own task
+        // NB: each exporter runs in its own task
         for exporter in self.exporters {
             let proc_tx = proc_tx.clone();
-            let task = tokio::spawn(async move {
+            tasks.push(tokio::spawn(async move {
                 let mut proc_rx = proc_tx.subscribe();
                 loop {
                     let data = match proc_rx.recv().await {
@@ -125,8 +127,7 @@ impl Server {
                     };
                     exporter.export(data).await;
                 }
-            });
-            tasks.push(task);
+            }));
         }
 
         // wait for all tasks

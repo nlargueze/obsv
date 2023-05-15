@@ -1,6 +1,6 @@
 //! Attributes
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +26,18 @@ impl From<Vec<Attr>> for Attrs {
     }
 }
 
+impl std::fmt::Display for Attrs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = self
+            .0
+            .iter()
+            .map(|attr| format!("{attr}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        write!(f, "{s}")
+    }
+}
+
 /// Attribute
 ///
 /// An attribute is a key-value pair
@@ -35,6 +47,12 @@ pub struct Attr {
     pub key: String,
     /// Value
     pub value: AttrValue,
+}
+
+impl std::fmt::Display for Attr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}={}", self.key, self.value)
+    }
 }
 
 impl Attr {
@@ -69,6 +87,33 @@ pub enum AttrValue {
     Array(Vec<AttrValue>),
     Map(HashMap<String, AttrValue>),
     Bytes(Vec<u8>),
+}
+
+impl std::fmt::Display for AttrValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AttrValue::None => write!(f, "NULL"),
+            AttrValue::Bool(b) => write!(f, "{b}"),
+            AttrValue::Str(s) => write!(f, "{s}"),
+            AttrValue::Uint(u) => write!(f, "{u}"),
+            AttrValue::Int(i) => write!(f, "{i}"),
+            AttrValue::Float(x) => write!(f, "{x}"),
+            AttrValue::Array(arr) => {
+                let s = arr
+                    .iter()
+                    .map(|v| format!("{v}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                write!(f, "{s}")
+            }
+            AttrValue::Map(map) => map
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect::<Vec<_>>()
+                .fmt(f),
+            AttrValue::Bytes(bytes) => write!(f, "{bytes:?}"),
+        }
+    }
 }
 
 impl AttrValue {

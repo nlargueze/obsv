@@ -1,6 +1,7 @@
 //! Trace
 
 use serde::{Deserialize, Serialize};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 use crate::attr::{Attr, Attrs};
 
@@ -10,6 +11,18 @@ use clickhouse_client::schema::prelude::*;
 /// Spans collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Spans(Vec<Span>);
+
+impl std::fmt::Display for Spans {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (i, span) in self.0.iter().enumerate() {
+            write!(f, "{span}")?;
+            if i < self.0.len() - 1 {
+                writeln!(f)?;
+            }
+        }
+        Ok(())
+    }
+}
 
 impl Spans {
     /// Creates a new span collection
@@ -40,6 +53,27 @@ pub struct Span {
     pub attrs: Attrs,
     /// Events
     pub events: SpanEvents,
+}
+
+impl std::fmt::Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let dt_start = OffsetDateTime::from_unix_timestamp_nanos(self.start as i128)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
+        let dt_end = OffsetDateTime::from_unix_timestamp_nanos(self.end as i128)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
+
+        write!(
+            f,
+            "trace_id={}, id={}, parent_id={}, name={}, start={}, end={} || {}",
+            self.trace_id,
+            self.id,
+            self.parent_id,
+            self.name,
+            dt_start.format(&Rfc3339).unwrap(),
+            dt_end.format(&Rfc3339).unwrap(),
+            self.attrs,
+        )
+    }
 }
 
 impl Span {
