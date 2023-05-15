@@ -7,6 +7,7 @@ pub mod conn;
 pub mod event;
 pub mod log;
 pub mod metric;
+pub mod monitor;
 pub mod trace;
 
 /// A core piece of data

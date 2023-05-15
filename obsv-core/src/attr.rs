@@ -4,7 +4,31 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+/// Collection of attributes
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Attrs(pub Vec<Attr>);
+
+impl Attrs {
+    /// Create a new [Attrs]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Pushes an attributes
+    pub fn push(&mut self, attr: Attr) {
+        self.0.push(attr);
+    }
+}
+
+impl From<Vec<Attr>> for Attrs {
+    fn from(value: Vec<Attr>) -> Self {
+        Self(value)
+    }
+}
+
 /// Attribute
+///
+/// An attribute is a key-value pair
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attr {
     /// Key

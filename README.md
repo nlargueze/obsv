@@ -2,8 +2,12 @@
 
 Super Simple Observability Platform
 
+## Deployment
+
+All services are packaged as an all-in-one executable, which can be configured to serve only specific services (deployed separately). It requires a running Clickhouse DB
+
 ```sh
-simple install script
+cargo run --bin osv
 ```
 
 ## Overview
@@ -49,11 +53,11 @@ flowchart LR
 - `obsv-core`: core structures and utilities
 - `obsv-collect`: collector service
 - `obsv-monitor`: monitoring service
-- `obsv-api`: service to serve data
+- `obsv-api`: data API service
 - `obsv-notify`: notification service
-- `obsv-dash`: dashboard server
-- `obsv-status`: status page server
-- `obsv-bin`: combined executables
+- `obsv-dash`: dashboard service
+- `obsv-status`: status page service
+- `obsv-bin`: executable
 - `lib/**`: shared libraries
 
 ## Similar tools

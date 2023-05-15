@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     let dl_file = out_dir.join(&dl_file_name);
     // NB: if the specs are already downloaded, we assumed the bindings have been generated
     if dl_file.exists() {
-        println!("cargo:warning=specs already downloaded -> skipped");
+        println!("cargo:warning=OTLP specs already downloaded -> skipped");
         return Ok(());
     }
 

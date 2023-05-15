@@ -1,21 +1,37 @@
 //! Logs
 
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 
-use crate::attr::Attr;
+use crate::attr::{Attr, Attrs};
+
+#[cfg(feature = "clickhouse")]
+use clickhouse_client::schema::prelude::*;
 
 /// A log
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "clickhouse", derive(DbRow))]
+#[cfg_attr(feature = "clickhouse", db(table = "logs"))]
 pub struct Log {
     /// ID
+    #[cfg_attr(feature = "clickhouse", db(primary))]
     pub id: u128,
-    /// Date
-    pub timestamp: OffsetDateTime,
+    /// Date (ns from EPOCH)
+    pub timestamp: u64,
     /// Message
     pub message: String,
     /// Attributes
-    pub attrs: Vec<Attr>,
+    pub attrs: Attrs,
+}
+
+impl Default for Log {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            timestamp: 0,
+            message: String::new(),
+            attrs: Attrs::new(),
+        }
+    }
 }
 
 impl Log {

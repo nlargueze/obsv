@@ -6,6 +6,7 @@ use obsv_otlp::proto::{
 };
 
 pub use obsv_otlp::*;
+use uuid::Uuid;
 
 use crate::{
     attr::{Attr, AttrValue},
@@ -61,13 +62,23 @@ impl From<obsv_otlp::proto::trace::v1::Span> for Span {
         let name = span.name;
         let start = span.start_time_unix_nano;
         let end = span.end_time_unix_nano;
-        let attrs = span.attributes.iter().map(|kv| kv.clone().into()).collect();
-        let events = span.events.iter().map(|ev| ev.clone().into()).collect();
+        let attrs = span
+            .attributes
+            .iter()
+            .map(|kv| kv.clone().into())
+            .collect::<Vec<_>>()
+            .into();
+        let events = span
+            .events
+            .iter()
+            .map(|ev| ev.clone().into())
+            .collect::<Vec<_>>()
+            .into();
 
         Span {
             trace_id,
-            id: span_id,
-            parent_id: parent_span_id,
+            id: span_id.into(),
+            parent_id: parent_span_id.into(),
             name,
             start,
             end,
@@ -83,9 +94,11 @@ impl From<obsv_otlp::proto::trace::v1::span::Event> for Event {
             .attributes
             .iter()
             .map(|kv| kv.clone().into())
-            .collect();
+            .collect::<Vec<Attr>>()
+            .into();
 
         Event {
+            id: Uuid::new_v4().as_u128(),
             timestamp: event.time_unix_nano,
             kind: "na".to_string(),
             name: event.name,

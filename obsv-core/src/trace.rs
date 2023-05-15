@@ -2,7 +2,13 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{attr::Attr, event::Event};
+use crate::{
+    attr::{Attr, Attrs},
+    event::{Event, Events},
+};
+
+#[cfg(feature = "clickhouse")]
+use clickhouse_client::schema::prelude::*;
 
 /// Spans collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,14 +22,17 @@ impl Spans {
 }
 
 /// A span
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "clickhouse", derive(DbRow))]
+#[cfg_attr(feature = "clickhouse", db(table = "traces"))]
 pub struct Span {
+    /// Span ID
+    pub id: u128,
+    #[cfg_attr(feature = "clickhouse", db(primary))]
     /// Trace ID
     pub trace_id: u128,
-    /// Span ID
-    pub id: u64,
     /// Parent span ID (0 if no parent)
-    pub parent_id: u64,
+    pub parent_id: u128,
     /// Span name
     pub name: String,
     /// Start time (ns from EPOCH)
@@ -31,9 +40,9 @@ pub struct Span {
     /// End time (ns from EPOCH)
     pub end: u64,
     /// Attributes
-    pub attrs: Vec<Attr>,
+    pub attrs: Attrs,
     /// Events
-    pub events: Vec<Event>,
+    pub events: Events,
 }
 
 impl Span {
@@ -47,6 +56,20 @@ impl Span {
     pub fn add_attrs(&mut self, attrs: impl IntoIterator<Item = impl Into<Attr>>) -> &mut Self {
         for attr in attrs.into_iter() {
             self.attrs.push(attr.into());
+        }
+        self
+    }
+
+    /// Adds an event
+    pub fn add_event(&mut self, event: impl Into<Event>) -> &mut Self {
+        self.events.push(event.into());
+        self
+    }
+
+    /// Adds events
+    pub fn add_events(&mut self, events: impl IntoIterator<Item = impl Into<Event>>) -> &mut Self {
+        for event in events.into_iter() {
+            self.events.push(event.into());
         }
         self
     }
