@@ -1,6 +1,6 @@
 //! Reporter
 
-use obsv_report::api::ApiServer;
+use obsv_api::ApiServer;
 
 #[tokio::main]
 async fn main() {

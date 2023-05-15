@@ -1,0 +1,19 @@
+[package]
+name = "obsv-notify"
+version = "0.1.0"
+edition = "2021"
+description = "Notification service"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nlargueze/obsv"
+
+[[bin]]
+name = "notify"
+path = "src/bin/notify.rs"
+
+[dependencies]
+async-trait = "0.1.68"
+duration-string = "0.3.0"
+log = "0.4.17"
+obsv-message = { version = "0.1.0", path = "../lib/obsv-message" }
+thiserror = "1.0.40"
+tokio = { version = "1.28.1", features = ["full"] }

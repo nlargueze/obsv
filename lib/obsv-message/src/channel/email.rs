@@ -5,10 +5,10 @@ use std::time::Duration;
 use async_trait::async_trait;
 use lettre::{
     message::header::ContentType, transport::smtp::authentication::Credentials, AsyncSmtpTransport,
-    AsyncTransport, Message, Tokio1Executor,
+    AsyncTransport, Tokio1Executor,
 };
 
-use crate::{channel::Channel, error::Error, Notification};
+use crate::{channel::Channel, error::Error};
 
 /// Email channel
 #[derive(Debug, Clone)]
@@ -122,15 +122,15 @@ impl EmailChannel {
     }
 
     /// Sends a message (internal method)
-    async fn send_internal(&self, notif: impl Notification) -> Result<(), Error> {
-        let email = self.assemble_email(notif)?;
+    async fn send_internal(&self, message: &str) -> Result<(), Error> {
+        let email = self.assemble_email(message)?;
         let _res = self.client.send(email).await?;
         Ok(())
     }
 
     /// Internal method to get the email
-    fn assemble_email(&self, _notif: impl Notification) -> Result<Message, Error> {
-        let mut builder = Message::builder();
+    fn assemble_email(&self, message: &str) -> Result<lettre::Message, Error> {
+        let mut builder = lettre::Message::builder();
 
         builder = builder.from(self.from.parse()?);
         if let Some(a) = &self.reply_to {
@@ -254,15 +254,15 @@ impl From<lettre::address::AddressError> for Error {
 
 #[async_trait]
 impl Channel for EmailChannel {
-    async fn send(&self, notif: impl Notification + Send) -> Result<(), Error> {
-        Ok(self.send_internal(notif).await?)
+    async fn send(&self, message: &str) -> Result<(), Error> {
+        Ok(self.send_internal(message).await?)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::TextNotification;
+    use crate::TextMessage;
 
     fn get_channel() -> EmailChannel {
         // NB: use a SMTP catch server (mailhog, mailpit)
@@ -289,7 +289,7 @@ mod tests {
     #[tokio::test]
     async fn test_notif() {
         let channel = get_channel();
-        let notif = TextNotification::new("test-message");
-        channel.send(notif).await.unwrap();
+        let message = TextMessage::new("test-message");
+        channel.send(&message.message).await.unwrap();
     }
 }

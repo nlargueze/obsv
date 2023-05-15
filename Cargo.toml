@@ -1,11 +1,12 @@
 [workspace]
 members = [
-    "obsv-bin",
     "obsv-core",
     "obsv-collect",
     "obsv-monitor",
-    "obsv-report",
-    "lib/obsv-notif",
+    "obsv-api",
+    "obsv-notify",
+    "obsv-bin",
+    "lib/obsv-message",
     "lib/obsv-otlp",
     "lib/obsv-grafana",
 ]

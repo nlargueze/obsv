@@ -1,6 +1,6 @@
-# obsv-notif
+# obsv-message
 
-This crate provides the utilities for notifications.
+This crate provides the utilities for messaging
 
 It is structured around the `Channel` trait, which represents a notification channel.
 

@@ -15,21 +15,21 @@ use serde::Serialize;
 
 pub use async_trait::async_trait;
 
-/// A trait that represents a notification
-pub trait Notification: Serialize {
+/// A trait that represents a message
+pub trait Message: Serialize {
     /// Returns the main message as a string
     fn message(&self) -> String;
 }
 
 /// A simple text notificaton
 #[derive(Debug, Clone, Serialize)]
-pub struct TextNotification {
+pub struct TextMessage {
     /// Message
     pub message: String,
 }
 
-impl TextNotification {
-    /// Instantiate a new notification
+impl TextMessage {
+    /// Instantiate a new [TextMessage]
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),
@@ -37,7 +37,7 @@ impl TextNotification {
     }
 }
 
-impl Notification for TextNotification {
+impl Message for TextMessage {
     fn message(&self) -> String {
         self.message.clone()
     }

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use reqwest::{header::HeaderValue, Body};
 
-use crate::channel::{Channel, Error, Notification};
+use crate::channel::{Channel, Error};
 
 /// Webhook channel
 ///
@@ -140,16 +140,16 @@ impl WebhookChannel {
 
 #[async_trait]
 impl Channel for WebhookChannel {
-    async fn send(&self, notif: impl Notification + Send) -> Result<(), Error> {
+    async fn send(&self, message: &str) -> Result<(), Error> {
         // for text or JSON payload, pass the event and message to the body
         let body = if let Some(payload) = &self.payload {
             match payload {
                 WebhookPayload::Text(v) => {
-                    let v = v.replace("{{message}}", &notif.message());
+                    let v = v.replace("{{message}}", message);
                     Body::from(v)
                 }
                 WebhookPayload::Json(v) => {
-                    let v = v.replace("{{message}}", &notif.message());
+                    let v = v.replace("{{message}}", message);
                     Body::from(v)
                 }
                 WebhookPayload::Binary(v) => Body::from(v.clone()),
@@ -177,7 +177,7 @@ impl Channel for WebhookChannel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::TextNotification;
+    use crate::TextMessage;
 
     fn get_channel() -> WebhookChannel {
         // NB: use a dummy server to reply to any request
@@ -196,7 +196,7 @@ mod tests {
     #[tokio::test]
     async fn test_notif() {
         let channel = get_channel();
-        let notif = TextNotification::new("test-message");
-        channel.send(notif).await.unwrap();
+        let message = TextMessage::new("test-message");
+        channel.send(&message.message).await.unwrap();
     }
 }
