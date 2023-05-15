@@ -7,28 +7,6 @@ use crate::attr::{Attr, Attrs};
 #[cfg(feature = "clickhouse")]
 use clickhouse_client::schema::prelude::*;
 
-/// Collection of events
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct Events(pub Vec<Event>);
-
-impl Events {
-    /// Create a new [Events]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Pushes an event
-    pub fn push(&mut self, event: Event) {
-        self.0.push(event);
-    }
-}
-
-impl From<Vec<Event>> for Events {
-    fn from(value: Vec<Event>) -> Self {
-        Self(value)
-    }
-}
-
 /// An event
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "clickhouse", derive(DbRow))]

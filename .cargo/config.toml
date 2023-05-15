@@ -1,5 +1,5 @@
 [env]
-RUST_LOG = "trace,mio=off"
+RUST_LOG = "info,mio=off,obsv-core=trace,clickhouse-client=trace"
 OBSV_OTEL_PROTO_VERSION = "0.19.0"
 
 [alias]

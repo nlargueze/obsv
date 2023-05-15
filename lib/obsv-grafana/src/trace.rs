@@ -26,7 +26,7 @@ pub struct Trace {
     /// Service tags
     pub service_tags: Vec<TraceKeyValuePair>,
     /// Start time (ms from EPOCH)
-    pub strat_time: u64,
+    pub start_time: u64,
     /// Duration (ms)
     pub duration: u64,
     // Logs

@@ -2,10 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    attr::{Attr, Attrs},
-    event::{Event, Events},
-};
+use crate::attr::{Attr, Attrs};
 
 #[cfg(feature = "clickhouse")]
 use clickhouse_client::schema::prelude::*;
@@ -42,7 +39,7 @@ pub struct Span {
     /// Attributes
     pub attrs: Attrs,
     /// Events
-    pub events: Events,
+    pub events: SpanEvents,
 }
 
 impl Span {
@@ -61,16 +58,62 @@ impl Span {
     }
 
     /// Adds an event
-    pub fn add_event(&mut self, event: impl Into<Event>) -> &mut Self {
+    pub fn add_event(&mut self, event: impl Into<SpanEvent>) -> &mut Self {
         self.events.push(event.into());
         self
     }
 
     /// Adds events
-    pub fn add_events(&mut self, events: impl IntoIterator<Item = impl Into<Event>>) -> &mut Self {
+    pub fn add_events(
+        &mut self,
+        events: impl IntoIterator<Item = impl Into<SpanEvent>>,
+    ) -> &mut Self {
         for event in events.into_iter() {
             self.events.push(event.into());
         }
+        self
+    }
+}
+
+/// Collection of span events
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SpanEvents(pub Vec<SpanEvent>);
+
+impl SpanEvents {
+    /// Create a new [Events]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Pushes an event
+    pub fn push(&mut self, event: SpanEvent) {
+        self.0.push(event);
+    }
+}
+
+impl From<Vec<SpanEvent>> for SpanEvents {
+    fn from(value: Vec<SpanEvent>) -> Self {
+        Self(value)
+    }
+}
+
+/// A span event
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SpanEvent {
+    /// Date (ns from EPOCH)
+    pub timestamp: u64,
+    /// Name
+    pub name: String,
+    /// Message
+    pub message: String,
+    /// Attributes
+    pub attrs: Attrs,
+}
+
+impl SpanEvent {
+    /// Adds an attribute
+    pub fn add_attr(&mut self, attr: impl Into<Attr>) -> &mut Self {
+        self.attrs.push(attr.into());
         self
     }
 }

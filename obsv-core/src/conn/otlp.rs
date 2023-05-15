@@ -6,12 +6,10 @@ use obsv_otlp::proto::{
 };
 
 pub use obsv_otlp::*;
-use uuid::Uuid;
 
 use crate::{
     attr::{Attr, AttrValue},
-    event::Event,
-    trace::{Span, Spans},
+    trace::{Span, SpanEvent, Spans},
     Data,
 };
 
@@ -88,7 +86,7 @@ impl From<obsv_otlp::proto::trace::v1::Span> for Span {
     }
 }
 
-impl From<obsv_otlp::proto::trace::v1::span::Event> for Event {
+impl From<obsv_otlp::proto::trace::v1::span::Event> for SpanEvent {
     fn from(event: obsv_otlp::proto::trace::v1::span::Event) -> Self {
         let attrs = event
             .attributes
@@ -97,10 +95,8 @@ impl From<obsv_otlp::proto::trace::v1::span::Event> for Event {
             .collect::<Vec<Attr>>()
             .into();
 
-        Event {
-            id: Uuid::new_v4().as_u128(),
+        SpanEvent {
             timestamp: event.time_unix_nano,
-            kind: "na".to_string(),
             name: event.name,
             message: "Event".to_string(),
             attrs,
