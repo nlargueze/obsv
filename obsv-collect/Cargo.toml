@@ -11,12 +11,15 @@ name = "collector"
 path = "src/bin/collector.rs"
 
 [features]
-default = ["http", "grpc"]
+default = ["http", "grpc", "clickhouse"]
 http = ["dep:hyper", "dep:serde_json"]
 grpc = ["dep:tonic"]
+clickhouse = ["dep:clickhouse-client"]
 
 [dependencies]
 async-trait = "0.1.68"
+clickhouse-client = { version = "0.8.0", optional = true }
+dyn-clone = "1.0.11"
 env_logger = "0.10.0"
 hyper = { version = "0.14.26", features = ["full"], optional = true }
 log = "0.4.17"

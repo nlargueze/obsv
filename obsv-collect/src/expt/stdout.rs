@@ -6,7 +6,7 @@ use obsv_core::Data;
 use super::Exporter;
 
 /// Stdout exporter
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct StdoutExporter {}
 
 impl StdoutExporter {
@@ -18,7 +18,7 @@ impl StdoutExporter {
 
 #[async_trait]
 impl Exporter for StdoutExporter {
-    async fn export(&self, data: Vec<Data>) {
+    async fn export(&self, data: &Vec<Data>) {
         log::trace!("exporting");
         for d in data {
             eprintln!("{d}");

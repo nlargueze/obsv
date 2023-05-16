@@ -1,6 +1,10 @@
 //! Attributes
 
-use std::{collections::HashMap, fmt::Debug};
+use std::{
+    collections::HashMap,
+    fmt::Debug,
+    ops::{Deref, DerefMut},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +21,20 @@ impl Attrs {
     /// Pushes an attributes
     pub fn push(&mut self, attr: Attr) {
         self.0.push(attr);
+    }
+}
+
+impl Deref for Attrs {
+    type Target = Vec<Attr>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Attrs {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

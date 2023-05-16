@@ -1,37 +1,14 @@
 //! Core structures and utilities for `obsv`
 
-use serde::{Deserialize, Serialize};
-
-pub mod attr;
-pub mod conn;
+mod attr;
 pub mod event;
-pub mod log;
+mod log;
 pub mod metric;
 pub mod monitor;
 pub mod trace;
 
-/// A core piece of data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Data {
-    Spans(trace::Spans),
-    /// Log
-    Logs(log::Logs),
-    /// Metric
-    Metrics(metric::Metrics),
-    /// Event
-    Event(event::Event),
-}
-
-impl std::fmt::Display for Data {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Data::Spans(spans) => write!(f, "{spans}"),
-            Data::Metrics(metrics) => write!(f, "{metrics}"),
-            Data::Logs(logs) => write!(f, "{logs}"),
-            Data::Event(event) => write!(f, "[EVENT] {event}"),
-        }
-    }
-}
+pub mod convert;
+pub use self::log::*;
 
 #[cfg(test)]
 mod tests {

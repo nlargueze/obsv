@@ -69,13 +69,12 @@ impl CollService {
         }
 
         // NB: there is a unique task waiting to receive a signal
-        let (proc_tx, _proc_rx) = tokio::sync::broadcast::channel::<Vec<Data>>(100);
+        // once received, a task is spawned to process the data and then export it in its own thread
         tasks.push(tokio::spawn({
-            let proc_tx = proc_tx.clone();
             async move {
                 // => we receive data from the receiver channel
                 loop {
-                    let data = match recv_rx.recv().await {
+                    let data_recv = match recv_rx.recv().await {
                         Some(d) => {
                             log::trace!("received data");
                             d
@@ -85,52 +84,36 @@ impl CollService {
                             panic!("closed receiver channel")
                         }
                     };
-                    let mut processed_data = vec![data];
-                    'loop_processors: for processor in &mut self.processors {
-                        processed_data = match processor.process(processed_data).await {
-                            Some(d) => d,
-                            None => {
-                                // NB: nothing is returned, so we skip the processing chain
-                                processed_data = vec![];
-                                break 'loop_processors;
+
+                    let mut processors = self.processors.clone();
+                    let exporters = self.exporters.clone();
+                    tokio::spawn(async move {
+                        let mut data = vec![data_recv];
+                        for processor in &mut processors {
+                            data = match processor.process(data).await {
+                                Some(d) => d,
+                                None => {
+                                    // NB: nothing is returned, so we stop the processing chain
+                                    return;
+                                }
                             }
                         }
-                    }
-                    if !processed_data.is_empty() {
-                        match proc_tx.send(processed_data) {
-                            Ok(_ok) => {}
-                            Err(_err) => {
-                                log::error!("closed processing channel");
-                                panic!("closed processing channel")
-                            }
-                        };
-                    }
+
+                        // NB: each exporter runs in its own task to export in parallel
+                        for exporter in exporters {
+                            tokio::spawn({
+                                let data = data.clone();
+                                async move {
+                                    exporter.export(&data).await;
+                                }
+                            });
+                        }
+                    });
                 }
             }
         }));
 
-        // NB: each exporter runs in its own task
-        for exporter in self.exporters {
-            let proc_tx = proc_tx.clone();
-            tasks.push(tokio::spawn(async move {
-                let mut proc_rx = proc_tx.subscribe();
-                loop {
-                    let data = match proc_rx.recv().await {
-                        Ok(d) => {
-                            log::trace!("processed data");
-                            d
-                        }
-                        Err(_err) => {
-                            log::error!("closed processing channel");
-                            panic!("closed processing channel")
-                        }
-                    };
-                    exporter.export(data).await;
-                }
-            }));
-        }
-
-        // wait for all tasks
+        // wait for all top-level tasks
         for task in tasks {
             task.await.unwrap();
         }

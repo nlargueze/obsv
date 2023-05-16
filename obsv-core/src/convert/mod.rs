@@ -1,4 +1,4 @@
-//! Connectors
+//! Conversion
 
 #[cfg(feature = "otlp")]
 pub mod otlp;

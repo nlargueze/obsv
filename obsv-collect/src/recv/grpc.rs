@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 
 use async_trait::async_trait;
 use obsv_core::{
-    conn::otlp::proto::collector::trace::v1::{
+    comvert::otlp::proto::collector::trace::v1::{
         trace_service_server, ExportTraceServiceRequest, ExportTraceServiceResponse,
     },
     Data,
@@ -33,16 +33,16 @@ impl GrpcReceiver {
 #[async_trait]
 impl Receiver for GrpcReceiver {
     async fn start(&self, tx: UnboundedSender<Data>) {
-        let service = trace_service_server::TraceServiceServer::new(TraceHandler::new(tx));
+        let trace_service = trace_service_server::TraceServiceServer::new(TraceHandler::new(tx));
         tonic::transport::Server::builder()
-            .add_service(service)
+            .add_service(trace_service)
             .serve(self.addr)
             .await
             .unwrap();
     }
 }
 
-/// GRPC service
+/// GRPC trace handler
 #[derive(Clone)]
 struct TraceHandler {
     /// Channel sender

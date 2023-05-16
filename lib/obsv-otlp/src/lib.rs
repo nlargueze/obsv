@@ -9,5 +9,6 @@
 
 // https://grafana.com/docs/grafana/latest/explore/trace-integration/
 
+pub mod conv;
 pub mod json;
 pub mod proto;

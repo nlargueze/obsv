@@ -15,6 +15,8 @@ use crate::{
     trace::{Span, SpanEvent, SpanEvents},
 };
 
+pub mod log;
+
 #[derive(Debug, thiserror::Error)]
 #[error("Clickhouse error: {0}")]
 pub struct Error(String);

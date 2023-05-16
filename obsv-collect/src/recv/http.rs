@@ -9,7 +9,7 @@ use hyper::{
     Body, Method, Request, Response, Server, StatusCode,
 };
 use obsv_core::{
-    conn::otlp::proto::collector::{
+    comvert::otlp::proto::collector::{
         logs::v1::ExportLogsServiceRequest, metrics::v1::ExportMetricsServiceRequest,
         trace::v1::ExportTraceServiceRequest,
     },

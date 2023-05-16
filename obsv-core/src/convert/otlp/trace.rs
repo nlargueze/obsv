@@ -8,14 +8,7 @@ use obsv_otlp::proto::{
 use crate::{
     attr::{Attr, AttrValue},
     trace::{Span, SpanEvent, Spans},
-    Data,
 };
-
-impl From<ExportTraceServiceRequest> for Data {
-    fn from(value: ExportTraceServiceRequest) -> Self {
-        Data::Spans(value.into())
-    }
-}
 
 impl From<ExportTraceServiceRequest> for Spans {
     fn from(req: ExportTraceServiceRequest) -> Self {
@@ -99,56 +92,5 @@ impl From<obsv_otlp::proto::trace::v1::span::Event> for SpanEvent {
             message: "Event".to_string(),
             attrs,
         }
-    }
-}
-
-impl From<Value> for AttrValue {
-    fn from(value: Value) -> Self {
-        match value {
-            obsv_otlp::proto::common::v1::any_value::Value::StringValue(s) => AttrValue::Str(s),
-            obsv_otlp::proto::common::v1::any_value::Value::BoolValue(b) => AttrValue::Bool(b),
-            obsv_otlp::proto::common::v1::any_value::Value::IntValue(i) => AttrValue::Int(i.into()),
-            obsv_otlp::proto::common::v1::any_value::Value::DoubleValue(d) => AttrValue::Float(d),
-            obsv_otlp::proto::common::v1::any_value::Value::ArrayValue(arr) => {
-                AttrValue::Array(arr.values.iter().map(|v| v.clone().into()).collect())
-            }
-            obsv_otlp::proto::common::v1::any_value::Value::KvlistValue(dict) => AttrValue::Map(
-                dict.values
-                    .iter()
-                    .map(|kv| {
-                        let key = kv.key.clone();
-                        let value: AttrValue = kv.value.clone().into();
-                        (key, value)
-                    })
-                    .collect(),
-            ),
-            obsv_otlp::proto::common::v1::any_value::Value::BytesValue(b) => AttrValue::Bytes(b),
-        }
-    }
-}
-
-impl From<AnyValue> for AttrValue {
-    fn from(value: AnyValue) -> Self {
-        match value.value {
-            Some(v) => v.into(),
-            None => AttrValue::None,
-        }
-    }
-}
-
-impl From<Option<AnyValue>> for AttrValue {
-    fn from(value: Option<AnyValue>) -> Self {
-        match value {
-            Some(v) => v.into(),
-            None => AttrValue::None,
-        }
-    }
-}
-
-impl From<KeyValue> for Attr {
-    fn from(kv: KeyValue) -> Self {
-        let key = kv.key.clone();
-        let value = kv.value;
-        Attr::new(&key, value)
     }
 }

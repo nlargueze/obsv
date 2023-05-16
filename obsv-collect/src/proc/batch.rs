@@ -2,18 +2,29 @@
 
 use async_trait::async_trait;
 use obsv_core::Data;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use super::Processor;
 
 /// Batch processor
 ///
 /// `N` is the buffer capacity
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BatchProcessor {
     /// Buffer capacity
     capacity: usize,
     /// Buffer
-    buffer: Vec<Data>,
+    buffer: Arc<Mutex<Data>>,
+}
+
+impl Clone for BatchProcessor {
+    fn clone(&self) -> Self {
+        Self {
+            capacity: self.capacity,
+            buffer: self.buffer.clone(),
+        }
+    }
 }
 
 impl BatchProcessor {
@@ -21,7 +32,7 @@ impl BatchProcessor {
     pub fn new(capacity: usize) -> Self {
         Self {
             capacity,
-            buffer: vec![],
+            buffer: Arc::new(Mutex::new(Data::default())),
         }
     }
 }
@@ -30,8 +41,9 @@ impl BatchProcessor {
 impl Processor for BatchProcessor {
     async fn process(&mut self, mut data: Vec<Data>) -> Option<Vec<Data>> {
         log::trace!("batch processing");
-        self.buffer.append(&mut data);
-        if self.buffer.len() <= self.capacity {
+        let mut buffer = self.buffer.lock().await;
+        *buffer.append(&mut data);
+        if *buffer.len() <= self.capacity {
             return None;
         }
         let overflown = self.buffer.drain(self.capacity..).collect::<Vec<_>>();

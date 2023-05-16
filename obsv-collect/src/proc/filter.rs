@@ -9,7 +9,7 @@ use super::Processor;
 #[derive(Debug, Clone)]
 pub struct FilterProcessor<F>
 where
-    F: Fn(&Data) -> bool + Send + Sync,
+    F: Fn(&Data) -> bool + Send + Sync + Clone,
 {
     /// Filtering rule
     filter: F,
@@ -17,7 +17,7 @@ where
 
 impl<F> FilterProcessor<F>
 where
-    F: Fn(&Data) -> bool + Send + Sync,
+    F: Fn(&Data) -> bool + Send + Sync + Clone,
 {
     /// Creates a new batch processor
     pub fn new(rule: F) -> Self {
@@ -28,7 +28,7 @@ where
 #[async_trait]
 impl<F> Processor for FilterProcessor<F>
 where
-    F: Fn(&Data) -> bool + Send + Sync,
+    F: Fn(&Data) -> bool + Send + Sync + Clone,
 {
     async fn process(&mut self, data: Vec<Data>) -> Option<Vec<Data>> {
         log::trace!("filtering processing");

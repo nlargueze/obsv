@@ -5,14 +5,7 @@ use obsv_otlp::proto::collector::metrics::v1::ExportMetricsServiceRequest;
 use crate::{
     attr::Attr,
     metric::{Metric, Metrics},
-    Data,
 };
-
-impl From<ExportMetricsServiceRequest> for Data {
-    fn from(value: ExportMetricsServiceRequest) -> Self {
-        Data::Metrics(value.into())
-    }
-}
 
 impl From<ExportMetricsServiceRequest> for Metrics {
     fn from(req: ExportMetricsServiceRequest) -> Self {

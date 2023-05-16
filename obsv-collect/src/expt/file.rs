@@ -12,7 +12,7 @@ use obsv_core::Data;
 use super::Exporter;
 
 /// Stdout exporter
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FileExporter {
     /// File path
     path: PathBuf,
@@ -29,7 +29,7 @@ impl FileExporter {
 
 #[async_trait]
 impl Exporter for FileExporter {
-    async fn export(&self, data: Vec<Data>) {
+    async fn export(&self, data: &Vec<Data>) {
         log::trace!("exporting");
         let mut file = OpenOptions::new()
             .create(true)

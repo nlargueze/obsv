@@ -13,13 +13,13 @@ async fn main() {
     let http_receiver = HttpReceiver::new("0.0.0.0:4318");
     let grpc_receiver = GrpcReceiver::new("0.0.0.0:4317");
     let stdout_exporter = StdoutExporter::new();
-    let file = std::env::temp_dir().join("logs.txt");
-    let file_exporter = FileExporter::new(&file);
+    let log_file = std::env::temp_dir().join("logs.txt");
+    let file_exporter = FileExporter::new(&log_file);
 
     eprintln!("[collector] receiver: HTTP listening on 0.0.0.0:4318");
     eprintln!("[collector] receiver: GRPC listening on 0.0.0.0:4317");
     eprintln!("[collector] exporter: stdout");
-    eprintln!("[collector] exporter: file ({})", file.display());
+    eprintln!("[collector] exporter: file ({})", log_file.display());
 
     CollService::new()
         .receiver(http_receiver)
