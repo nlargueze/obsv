@@ -7,9 +7,9 @@ use duration_string::DurationString;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-use crate::{attr::Attrs, Monitor, MonitorCheck, MonitorCheckStatus};
+use crate::{Monitor, MonitorCheck, MonitorCheckStatus};
 
-use super::Error;
+use super::{attr::DbAttrs, Error};
 
 /// A DB monitor
 #[derive(Debug, Clone, Default, DbRecord)]
@@ -27,7 +27,7 @@ pub struct DbMonitor {
     /// Frequency
     pub frequency: String,
     /// Attributes
-    pub attrs: Attrs,
+    pub attrs: DbAttrs,
 }
 
 /// A DB monitor check
@@ -70,7 +70,7 @@ impl From<Monitor> for DbMonitor {
             kind: value.kind,
             target: value.target,
             frequency: DurationString::new(value.frequency).to_string(),
-            attrs: Attrs::new(),
+            attrs: DbAttrs::default(),
         }
     }
 }
@@ -200,6 +200,11 @@ mod tests {
                 eprintln!("{monitors:#?}")
             }
             Err(err) => {
+                tracing::error!(
+                    test = "test_clickhouse_monitors",
+                    error = err.to_string(),
+                    "failed to get"
+                );
                 panic!("{}", err);
             }
         };
@@ -244,7 +249,7 @@ mod tests {
                 tracing::error!(
                     test = "test_clickhouse_checks",
                     error = err.to_string(),
-                    "failed to select"
+                    "failed to get"
                 );
                 panic!("{}", err);
             }

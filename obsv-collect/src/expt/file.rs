@@ -7,7 +7,8 @@ use std::{
 };
 
 use async_trait::async_trait;
-use obsv_core::Data;
+
+use crate::Data;
 
 use super::Exporter;
 
@@ -38,9 +39,14 @@ impl Exporter for FileExporter {
             .unwrap();
         let content = data
             .into_iter()
-            .map(|d| d.to_string())
+            .map(|d| format_data(d))
             .collect::<Vec<_>>()
             .join("\n");
         file.write_all(content.as_bytes()).unwrap();
     }
+}
+
+/// Formats Data into a string
+fn format_data(data: &Data) -> String {
+    todo!("implement data formatting for stdout");
 }

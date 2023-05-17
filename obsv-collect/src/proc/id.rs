@@ -1,7 +1,8 @@
 // Identity processor
 
 use async_trait::async_trait;
-use obsv_core::Data;
+
+use crate::Data;
 
 use super::Processor;
 

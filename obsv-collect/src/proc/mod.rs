@@ -4,7 +4,8 @@
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
-use obsv_core::Data;
+
+use crate::Data;
 
 pub mod batch;
 pub mod filter;

@@ -1,7 +1,8 @@
 //! Stdout exporter
 
 use async_trait::async_trait;
-use obsv_core::Data;
+
+use crate::Data;
 
 use super::Exporter;
 
@@ -21,7 +22,12 @@ impl Exporter for StdoutExporter {
     async fn export(&self, data: &Vec<Data>) {
         log::trace!("exporting");
         for d in data {
-            eprintln!("{d}");
+            eprintln!("{}", format_data(d));
         }
     }
+}
+
+/// Formats Data into a string
+fn format_data(data: &Data) -> String {
+    todo!("implement data formatting for stdout");
 }

@@ -1,30 +1,37 @@
 //! OTLP metrics
 
-use obsv_otlp::proto::collector::metrics::v1::ExportMetricsServiceRequest;
-use time::OffsetDateTime;
-use uuid::Uuid;
+use std::collections::HashMap;
+
+use obsv_otlp::{conv::ServiceSemConv, proto};
 
 use crate::{
     attr::{Attr, Attrs},
     metric::{Metric, Metrics},
 };
 
-impl From<ExportMetricsServiceRequest> for Metrics {
-    fn from(value: ExportMetricsServiceRequest) -> Self {
+impl From<proto::collector::metrics::v1::ExportMetricsServiceRequest> for Metrics {
+    fn from(value: proto::collector::metrics::v1::ExportMetricsServiceRequest) -> Self {
         let mut metrics = vec![];
         for resource in value.resource_metrics {
+            let mut resource_name = "".to_string();
             let resource_attrs = if let Some(r) = resource.resource {
                 // NB: the resource defines the
                 r.attributes
                     .iter()
-                    .map(|kv| Attr::from(kv.clone()))
-                    .collect::<Vec<_>>()
+                    .map(|kv| {
+                        let attr: Attr = kv.clone().into();
+                        if attr.key == ServiceSemConv::SERVICE_NAME {
+                            resource_name = attr.value.to_string();
+                        }
+                        (attr.key, attr.value)
+                    })
+                    .collect::<HashMap<_, _>>()
             } else {
-                vec![]
+                HashMap::new()
             };
 
             for scope_metrics in resource.scope_metrics {
-                let (_scope_name, _scope_version, scope_attrs) =
+                let (scope_name, _scope_version, scope_attrs) =
                     if let Some(scope) = scope_metrics.scope {
                         (
                             scope.name,
@@ -32,17 +39,22 @@ impl From<ExportMetricsServiceRequest> for Metrics {
                             scope
                                 .attributes
                                 .iter()
-                                .map(|kv| Attr::from(kv.clone()))
-                                .collect::<Vec<_>>(),
+                                .map(|kv| {
+                                    let attr: Attr = kv.clone().into();
+                                    (attr.key, attr.value)
+                                })
+                                .collect::<HashMap<_, _>>(),
                         )
                     } else {
-                        (String::new(), String::new(), vec![])
+                        (String::new(), String::new(), HashMap::new())
                     };
 
                 for metric in scope_metrics.metrics {
                     let mut metric: Metric = metric.into();
-                    metric.add_attrs(resource_attrs.clone());
-                    metric.add_attrs(scope_attrs.clone());
+                    metric.resource = resource_name.clone();
+                    metric.resource_attrs = resource_attrs.clone();
+                    metric.scope = scope_name.clone();
+                    metric.scope_attrs = scope_attrs.clone();
                     metrics.push(metric);
                 }
             }
@@ -54,11 +66,11 @@ impl From<ExportMetricsServiceRequest> for Metrics {
 impl From<obsv_otlp::proto::metrics::v1::Metric> for Metric {
     fn from(value: obsv_otlp::proto::metrics::v1::Metric) -> Self {
         let name = value.name;
+        let descr = value.description;
+        let unit = value.unit;
 
-        // TODO: implement the mapping of description, unit, data
-        // let _descr = value.description;
-        // let _unit = value.unit;
-        // let _data = match value.data {
+        // TODO: add metric data
+        // let _data =  match value.data {
         //     Some(data) => match data {
         //         obsv_otlp::proto::metrics::v1::metric::Data::Gauge(g) => {
         //             g.data_points.iter().map(|dp| dp.value).collect()
@@ -73,17 +85,20 @@ impl From<obsv_otlp::proto::metrics::v1::Metric> for Metric {
         //             e.data_points.iter().map(|dp| dp.value).collect()
         //         }
         //         obsv_otlp::proto::metrics::v1::metric::Data::Summary(s) => {
-        //             s.data_points.iter().map(|dp| dp.).collect()
+        //             s.data_points.iter().map(|dp| dp).collect()
         //         }
         //     },
         //     None => {}
         // };
 
         Metric {
-            id: Uuid::new_v4().as_u128(),
-            timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as u64,
+            resource: String::new(),
+            resource_attrs: Attrs::new(),
+            scope: String::new(),
+            scope_attrs: Attrs::new(),
             name,
-            attrs: Attrs::new(),
+            descr,
+            unit,
         }
     }
 }

@@ -8,7 +8,6 @@
 //! - **grpc**: GRPC server
 
 use expt::Exporter;
-use obsv_core::Data;
 use proc::Processor;
 use recv::Receiver;
 
@@ -49,6 +48,18 @@ impl CollService {
     pub fn exporter(mut self, exporter: impl Exporter + 'static) -> Self {
         self.exporters.push(Box::new(exporter));
         self
+    }
+}
+
+/// A piece of collection data
+#[derive(Debug, Clone)]
+pub enum Data {
+    ToDo,
+}
+
+impl Default for Data {
+    fn default() -> Self {
+        Self::ToDo
     }
 }
 

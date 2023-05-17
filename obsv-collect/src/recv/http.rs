@@ -8,14 +8,13 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Method, Request, Response, Server, StatusCode,
 };
-use obsv_core::{
-    comvert::otlp::proto::collector::{
-        logs::v1::ExportLogsServiceRequest, metrics::v1::ExportMetricsServiceRequest,
-        trace::v1::ExportTraceServiceRequest,
-    },
-    Data,
+use obsv_core::conn::otlp::proto::collector::{
+    logs::v1::ExportLogsServiceRequest, metrics::v1::ExportMetricsServiceRequest,
+    trace::v1::ExportTraceServiceRequest,
 };
 use tokio::sync::mpsc::UnboundedSender;
+
+use crate::Data;
 
 use super::Receiver;
 
@@ -82,11 +81,12 @@ pub async fn handle_req(
                 }
             };
             // sending to channel
-            if let Err(err) = tx.send(otlp_req.into()) {
-                log::error!("Error sending data to channel: {err}");
-            }
-            // ok
-            Ok(Response::new(Body::empty()))
+            todo!("handle http request for traces");
+            // if let Err(err) = tx.send(otlp_req.into()) {
+            //     log::error!("Error sending data to channel: {err}");
+            // }
+            // // ok
+            // Ok(Response::new(Body::empty()))
         }
         // OTLP/HTTP metrics collector
         (&Method::POST, "/v1/metrics") => {
@@ -103,11 +103,12 @@ pub async fn handle_req(
                 }
             };
             // sending to channel
-            if let Err(err) = tx.send(otlp_req.into()) {
-                log::error!("Error sending data to channel: {err}");
-            }
-            // ok
-            Ok(Response::new(Body::empty()))
+            todo!("handle http request for metrics");
+            // if let Err(err) = tx.send(otlp_req.into()) {
+            //     log::error!("Error sending data to channel: {err}");
+            // }
+            // // ok
+            // Ok(Response::new(Body::empty()))
         }
         // OTLP/HTTP logs collector
         (&Method::POST, "/v1/logs") => {
@@ -124,11 +125,12 @@ pub async fn handle_req(
                 }
             };
             // sending to channel
-            if let Err(err) = tx.send(otlp_req.into()) {
-                log::error!("Error sending data to channel: {err}");
-            }
-            // ok
-            Ok(Response::new(Body::empty()))
+            todo!("handle http request for logs");
+            // if let Err(err) = tx.send(otlp_req.into()) {
+            //     log::error!("Error sending data to channel: {err}");
+            // }
+            // // ok
+            // Ok(Response::new(Body::empty()))
         }
         _ => Ok(Response::builder()
             .status(StatusCode::NOT_FOUND)

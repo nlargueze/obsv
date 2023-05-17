@@ -3,14 +3,13 @@
 use std::net::SocketAddr;
 
 use async_trait::async_trait;
-use obsv_core::{
-    comvert::otlp::proto::collector::trace::v1::{
-        trace_service_server, ExportTraceServiceRequest, ExportTraceServiceResponse,
-    },
-    Data,
+use obsv_core::conn::otlp::proto::collector::trace::v1::{
+    trace_service_server, ExportTraceServiceRequest, ExportTraceServiceResponse,
 };
 use tokio::sync::mpsc::UnboundedSender;
 use tonic::{Request, Response};
+
+use crate::Data;
 
 use super::Receiver;
 
@@ -64,17 +63,18 @@ impl trace_service_server::TraceService for TraceHandler {
     ) -> Result<Response<ExportTraceServiceResponse>, tonic::Status> {
         log::trace!("received GRPC request");
 
-        // sending to channel
-        let (_, _, req) = req.into_parts();
-        let data: Data = Data::Spans(req.into());
-        match self.tx.send(data) {
-            Ok(_ok) => {}
-            Err(err) => {
-                log::error!("Error sending data to channel: {err}");
-            }
-        }
-        Ok(Response::new(ExportTraceServiceResponse {
-            partial_success: None,
-        }))
+        // // sending to channel
+        // let (_, _, req) = req.into_parts();
+        // let data: Data = Data::Spans(req.into());
+        // match self.tx.send(data) {
+        //     Ok(_ok) => {}
+        //     Err(err) => {
+        //         log::error!("Error sending data to channel: {err}");
+        //     }
+        // }
+        // Ok(Response::new(ExportTraceServiceResponse {
+        //     partial_success: None,
+        // }))
+        todo!("implement trace handler")
     }
 }

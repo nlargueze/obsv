@@ -1,28 +1,38 @@
 //! OTLP logs
 
-use uuid::Uuid;
+use std::collections::HashMap;
+
+use obsv_otlp::{conv::ServiceSemConv, proto};
+use time::OffsetDateTime;
 
 use crate::{
     attr::{Attr, AttrValue},
     log::{Log, Logs},
 };
 
-impl From<obsv_otlp::proto::collector::logs::v1::ExportLogsServiceRequest> for Logs {
+impl From<proto::collector::logs::v1::ExportLogsServiceRequest> for Logs {
     fn from(value: obsv_otlp::proto::collector::logs::v1::ExportLogsServiceRequest) -> Self {
         let mut logs = vec![];
         for resource in value.resource_logs {
+            let mut resource_name = "".to_string();
             let resource_attrs = if let Some(r) = resource.resource {
                 // NB: the resource defines the
                 r.attributes
                     .iter()
-                    .map(|kv| Attr::from(kv.clone()))
-                    .collect::<Vec<_>>()
+                    .map(|kv| {
+                        let attr: Attr = kv.clone().into();
+                        if attr.key == ServiceSemConv::SERVICE_NAME {
+                            resource_name = attr.value.to_string();
+                        }
+                        (attr.key, attr.value)
+                    })
+                    .collect::<HashMap<_, _>>()
             } else {
-                vec![]
+                HashMap::new()
             };
 
             for scope_logs in resource.scope_logs {
-                let (_scope_name, _scope_version, scope_attrs) =
+                let (scope_name, _scope_version, scope_attrs) =
                     if let Some(scope) = scope_logs.scope {
                         (
                             scope.name,
@@ -30,17 +40,22 @@ impl From<obsv_otlp::proto::collector::logs::v1::ExportLogsServiceRequest> for L
                             scope
                                 .attributes
                                 .iter()
-                                .map(|kv| Attr::from(kv.clone()))
-                                .collect::<Vec<_>>(),
+                                .map(|kv| {
+                                    let attr: Attr = kv.clone().into();
+                                    (attr.key, attr.value)
+                                })
+                                .collect::<HashMap<_, _>>(),
                         )
                     } else {
-                        (String::new(), String::new(), vec![])
+                        (String::new(), String::new(), HashMap::new())
                     };
 
                 for record in scope_logs.log_records {
                     let mut log: Log = record.into();
-                    log.add_attrs(resource_attrs.clone());
-                    log.add_attrs(scope_attrs.clone());
+                    log.resource = resource_name.clone();
+                    log.resource_attrs = resource_attrs.clone();
+                    log.scope = scope_name.clone();
+                    log.scope_attrs = scope_attrs.clone();
                     logs.push(log);
                 }
             }
@@ -51,7 +66,11 @@ impl From<obsv_otlp::proto::collector::logs::v1::ExportLogsServiceRequest> for L
 
 impl From<obsv_otlp::proto::logs::v1::LogRecord> for Log {
     fn from(value: obsv_otlp::proto::logs::v1::LogRecord) -> Self {
-        let ts = value.time_unix_nano;
+        let timestamp = OffsetDateTime::from_unix_timestamp_nanos(value.time_unix_nano.into())
+            .unwrap_or_else(|ns| {
+                log::error!("invalid log time (ns): {}", ns);
+                OffsetDateTime::UNIX_EPOCH
+            });
         let _ts_observed = value.observed_time_unix_nano;
         let severity = value.severity_number;
         let _severity_txt = value.severity_text;
@@ -59,20 +78,32 @@ impl From<obsv_otlp::proto::logs::v1::LogRecord> for Log {
         let attrs = value
             .attributes
             .iter()
-            .map(|kv| Attr::from(kv.clone()))
-            .collect::<Vec<_>>();
+            .map(|kv| {
+                let attr: Attr = kv.clone().into();
+                (attr.key, attr.value)
+            })
+            .collect::<HashMap<_, _>>();
         let _flags = value.flags;
-        let trace_id = value.trace_id;
-        let span_id = value.span_id;
+        let trace_id = u128::from_be_bytes(value.trace_id.try_into().unwrap_or_else(|bytes| {
+            log::error!("invalid trace ID: {:?}", bytes);
+            [0; 16]
+        }));
+        let span_id = u64::from_be_bytes(value.span_id.try_into().unwrap_or_else(|bytes| {
+            log::error!("invalid span ID: {:?}", bytes);
+            [0; 8]
+        }));
 
         Log {
-            id: Uuid::new_v4().as_u128(),
-            trace_id: u128::from_be_bytes(trace_id.try_into().unwrap_or_default()),
-            span_id: u64::from_be_bytes(span_id.try_into().unwrap_or_default()),
-            timestamp: ts,
+            resource: String::new(),
+            resource_attrs: HashMap::new(),
+            scope: String::new(),
+            scope_attrs: HashMap::new(),
+            timestamp,
             level: severity,
             message: body.to_string(),
-            attrs: attrs.into(),
+            attrs,
+            trace_id,
+            span_id,
         }
     }
 }

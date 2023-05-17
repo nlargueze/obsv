@@ -1,8 +1,9 @@
 //! Receiver
 
 use async_trait::async_trait;
-use obsv_core::Data;
 use tokio::sync::mpsc::UnboundedSender;
+
+use crate::Data;
 
 #[cfg(feature = "grpc")]
 pub mod grpc;

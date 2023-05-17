@@ -1,12 +1,11 @@
 //! Semantic conventions
 
-/// Semantic conventions for Resource
-pub struct ResourceSemConvention {
-    /// Private field to prevent instantiation
+/// Semantic conventions for services
+pub struct ServiceSemConv {
     _private: (),
 }
 
-impl ResourceSemConvention {
+impl ServiceSemConv {
     /// Service name (string)
     pub const SERVICE_NAME: &str = "service.name";
 
@@ -18,7 +17,14 @@ impl ResourceSemConvention {
 
     /// Service version (string)
     pub const SERVICE_VERSION: &str = "service.version";
+}
 
+/// Semantic conventions for Telemetry
+pub struct TelemetrySemConv {
+    _private: (),
+}
+
+impl TelemetrySemConv {
     /// Telemetry SDK name (string)
     pub const TELEMETRY_SDK_NAME: &str = "telemetry.sdk.name";
 
@@ -30,7 +36,14 @@ impl ResourceSemConvention {
 
     /// Telemetry auto version (string)
     pub const TELEMETRY_AUTO_VERSION: &str = "telemetry.auto.version";
+}
 
+/// Semantic conventions for containers
+pub struct ContainerSemConv {
+    _private: (),
+}
+
+impl ContainerSemConv {
     /// Container name (string)
     pub const CONTAINER_NAME: &str = "container.name";
 
@@ -45,7 +58,14 @@ impl ResourceSemConvention {
 
     /// Container image tag (string)
     pub const CONTAINER_IMAGE_TAG: &str = "container.image.tag";
+}
 
+/// Semantic conventions for FAAS
+pub struct FaasSemConv {
+    _private: (),
+}
+
+impl FaasSemConv {
     /// Faas name (string)
     pub const FAAS_NAME: &str = "faas.name";
 
@@ -57,7 +77,14 @@ impl ResourceSemConvention {
 
     /// Faas instance (int - bytes)
     pub const FAAS_MAX_MEMORY: &str = "faas.max_memory";
+}
 
+/// Semantic conventions for processes
+pub struct ProcessSemConv {
+    _private: (),
+}
+
+impl ProcessSemConv {
     /// Process PID (int)
     pub const PROCESS_PID: &str = "process.pid";
 
@@ -81,7 +108,14 @@ impl ResourceSemConvention {
 
     /// Process owner (string)
     pub const PROCESS_OWNER: &str = "process.owner";
+}
 
+/// Semantic conventions for webengines
+pub struct WebEngineSemConv {
+    _private: (),
+}
+
+impl WebEngineSemConv {
     /// Web engine name (string)
     pub const WEBENGINE_NAME: &str = "webengine.name";
 
@@ -90,7 +124,14 @@ impl ResourceSemConvention {
 
     /// Web engine description (string)
     pub const WEBENGINE_DESCRIPTION: &str = "webengine.description";
+}
 
+/// Semantic conventions for hosts
+pub struct HostSemConv {
+    _private: (),
+}
+
+impl HostSemConv {
     /// Host ID (string)
     pub const HOST_ID: &str = "host.id";
 
@@ -111,7 +152,14 @@ impl ResourceSemConvention {
 
     /// Host image version (string)
     pub const HOST_IMAGE_VERSION: &str = "host.image.version";
+}
 
+/// Semantic conventions for OS
+pub struct OsSemConv {
+    _private: (),
+}
+
+impl OsSemConv {
     /// OS type (string)
     pub const OS_TYPE: &str = "os.type";
 
@@ -123,7 +171,14 @@ impl ResourceSemConvention {
 
     /// OS version (string)
     pub const OS_VERSION: &str = "os.version";
+}
 
+/// Semantic conventions for devices
+pub struct DeviceSemConv {
+    _private: (),
+}
+
+impl DeviceSemConv {
     /// Device id (string)
     pub const DEVICE_ID: &str = "device.id";
 
@@ -135,7 +190,14 @@ impl ResourceSemConvention {
 
     /// Device manufacturer (string)
     pub const DEVICE_MANUFACTURER: &str = "device.manufacturer";
+}
 
+/// Semantic conventions for clouds
+pub struct CloudSemConv {
+    _private: (),
+}
+
+impl CloudSemConv {
     /// Cloud provider (string)
     pub const CLOUD_ID: &str = "cloud.provider";
 
@@ -153,7 +215,14 @@ impl ResourceSemConvention {
 
     /// Cloud platform (string)
     pub const CLOUD_PLATFORM: &str = "cloud.platform";
+}
 
+/// Semantic conventions for browsers
+pub struct BrowserSemConv {
+    _private: (),
+}
+
+impl BrowserSemConv {
     /// Browser brands (string[])
     pub const BROWSER_BRANDS: &str = "browser.brands";
 
@@ -168,4 +237,206 @@ impl ResourceSemConvention {
 
     /// User agent (string)
     pub const USER_AGENT_ORIGINAL: &str = "user_agent.original";
+}
+
+/// Semantic conventions for networks
+pub struct NetSemConv {
+    _private: (),
+}
+
+impl NetSemConv {
+    /// Transport protocol (string)
+    pub const NET_TRANSPORT: &str = "net.transport";
+
+    /// Transport protocol name (string)
+    pub const NET_PROTOCOL_NAME: &str = "net.protocol.name";
+
+    /// Transport protocol version (string)
+    pub const NET_PROTOCOL_VERSION: &str = "net.protocol.version";
+
+    /// Remote socket peer name (string)
+    pub const NET_SOCK_PEER_NAME: &str = "net.sock.peer.name";
+
+    /// Remote socket peer address (string)
+    pub const NET_SOCK_PEER_ADDR: &str = "net.sock.peer.addr";
+
+    /// Remote socket peer port (int)
+    pub const NET_SOCK_PEER_PORT: &str = "net.sock.peer.port";
+
+    /// Remote socket family (string)
+    pub const NET_SOCK_FAMILY: &str = "net.sock.family";
+
+    /// Remote peer name (string)
+    pub const NET_PEER_NAME: &str = "net.peer.name";
+
+    /// Remote peer port (int)
+    pub const NET_PEER_PORT: &str = "net.peer.port";
+
+    /// Local host name (string)
+    pub const NET_HOST_NAME: &str = "net.host.name";
+
+    /// Local host name (int)
+    pub const NET_HOST_PORT: &str = "net.host.port";
+
+    /// Local socket address (string)
+    pub const NET_SOCK_HOST_ADDR: &str = "net.sock.host.addr";
+
+    /// Local socket port (int)
+    pub const NET_SOCK_HOST_PORT: &str = "net.sock.host.port";
+
+    /// Host internet connection type (string)
+    pub const NET_HOST_CONNECTION_TYPE: &str = "net.host.connection.type";
+
+    /// Host internet connection subtype (string)
+    pub const NET_HOST_CONNECTION_SUBTYPE: &str = "net.host.connection.subtype";
+
+    /// Host internet carrier (string)
+    pub const NET_HOST_CARRIER_NAME: &str = "net.host.carrier.name";
+
+    /// Host internet carrier country code (string)
+    pub const NET_HOST_CARRIER_MCC: &str = "net.host.carrier.mcc";
+
+    /// Host internet carrier network code (string)
+    pub const NET_HOST_CARRIER_MNC: &str = "net.host.carrier.mnc";
+
+    /// Host internet carrier country code (string)
+    pub const NET_HOST_CARRIER_ICC: &str = "net.host.carrier.icc";
+}
+
+/// Semantic conventions for peers
+pub struct PeerSemConv {
+    _private: (),
+}
+
+impl PeerSemConv {
+    /// Remote service name (string)
+    pub const PEER_SERVICE: &str = "peer.service";
+}
+
+/// Semantic conventions for end users
+pub struct EndUserSemConv {
+    _private: (),
+}
+
+impl EndUserSemConv {
+    /// End user ID (string)
+    pub const ENDUSER_ID: &str = "enduser.id";
+
+    /// End user role (string)
+    pub const ENDUSER_ROLE: &str = "enduser.role";
+
+    /// End user scope (string)
+    pub const ENDUSER_SCOPE: &str = "enduser.scope";
+}
+
+/// Semantic conventions for threads
+pub struct ThreadSemConv {
+    _private: (),
+}
+
+impl ThreadSemConv {
+    /// Thread ID (int)
+    pub const THREAD_ID: &str = "thread.id";
+
+    /// Thread name (string)
+    pub const THREAD_NAME: &str = "thread.name";
+}
+
+/// Semantic conventions for the source code
+pub struct CodeSemConv {
+    _private: (),
+}
+
+impl CodeSemConv {
+    /// Source code function (string)
+    pub const CODE_FUNCTION: &str = "code.function";
+
+    /// Source code namespace (string)
+    pub const CODE_NAMESPACE: &str = "code.namespace";
+
+    /// Source code filepath (string)
+    pub const CODE_FILEPATH: &str = "code.filepath";
+
+    /// Source code line number (int)
+    pub const CODE_LINENO: &str = "code.lineno";
+
+    /// Source code column number (int)
+    pub const CODE_COLUMN: &str = "code.column";
+}
+
+/// Semantic conventions for HTTP
+pub struct HttpSemConv {
+    _private: (),
+}
+
+impl HttpSemConv {
+    /// HTTP status code (int)
+    pub const HTTP_STATUS_CODE: &str = "http.status_code";
+
+    /// HTTP request content length (int)
+    pub const HTTP_REQUEST_CONTENT_LENGTH: &str = "http.request_content_length";
+
+    /// HTTP response content length (int)
+    pub const HTTP_RESPONSE_CONTENT_LENGTH: &str = "http.response_content_length";
+
+    /// HTTP request method (string)
+    pub const HTTP_METHOD: &str = "http.method";
+
+    /// User agent (string)
+    pub const USER_AGENT_ORIGINAL: &str = "user_agent.original";
+
+    /// HTTP request header (string[]) - this is the prefix
+    pub const HTTP_REQUEST_HEADER_: &str = "http.request.header.";
+
+    /// HTTP url (string)
+    pub const HTTP_URL: &str = "http.url";
+
+    /// HTTP resend count (int)
+    pub const HTTP_RESEND_COUNT: &str = "http.resend_count";
+
+    /// HTTP route (string)
+    pub const HTTP_ROUTE: &str = "http.route";
+
+    /// HTTP target (string)
+    pub const HTTP_TARGET: &str = "http.target";
+
+    /// HTTP client IP (string)
+    pub const HTTP_CLIENT_IP: &str = "http.client_ip";
+
+    /// HTTP scheme (string)
+    pub const HTTP_SCHEME: &str = "http.scheme";
+}
+
+/// Semantic conventions for databases
+pub struct DbSemConv {
+    _private: (),
+}
+
+impl DbSemConv {
+    /// DB system (string)
+    pub const DB_SYSTEM: &str = "db.system";
+
+    /// DB connections string (string)
+    pub const DB_CONNECTION_STRING: &str = "db.connection_string";
+
+    /// DB user (string)
+    pub const DB_USER: &str = "db.user";
+
+    /// DB name (string)
+    pub const DB_NAME: &str = "db.name";
+
+    /// DB statement (string)
+    pub const DB_STATEMENT: &str = "db.statement";
+
+    /// DB operation (string)
+    pub const DB_OPERATION: &str = "db.operation";
+
+    /// DB redis db index (string)
+    pub const DB_REDIS_DATABASE_INDEX: &str = "db.redis.database_index";
+
+    /// DB mongoDB collection (string)
+    pub const DB_MONGODB_COLLECTION: &str = "db.mongodb.collection";
+
+    /// DB SQL table (string)
+    pub const DB_SQL_TABLE: &str = "db.sql.table";
 }

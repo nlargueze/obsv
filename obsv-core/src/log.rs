@@ -4,73 +4,8 @@ use std::ops::{Deref, DerefMut};
 
 use serde::{Deserialize, Serialize};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
-use uuid::Uuid;
 
-use crate::attr::{Attr, Attrs};
-
-/// A log
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Log {
-    /// ID
-    pub id: u128,
-    /// Trace id
-    pub trace_id: u128,
-    /// Span id
-    pub span_id: u64,
-    /// Date (ns from EPOCH)
-    pub timestamp: u64,
-    /// Level (severity)
-    pub level: i32,
-    /// Message
-    pub message: String,
-    /// Attributes
-    pub attrs: Attrs,
-}
-
-impl Log {
-    /// Creates a new log
-    pub fn new(message: &str) -> Self {
-        Self {
-            id: Uuid::new_v4().as_u128(),
-            trace_id: 0,
-            span_id: 0,
-            timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as u64,
-            level: 0,
-            message: message.to_string(),
-            attrs: Attrs::new(),
-        }
-    }
-
-    /// Adds an attribute
-    pub fn add_attr(&mut self, attr: impl Into<Attr>) -> &mut Self {
-        self.attrs.push(attr.into());
-        self
-    }
-
-    /// Adds attributes
-    pub fn add_attrs(&mut self, attrs: impl IntoIterator<Item = impl Into<Attr>>) -> &mut Self {
-        self.attrs
-            .0
-            .append(&mut attrs.into_iter().map(|a| a.into()).collect());
-        self
-    }
-}
-
-impl std::fmt::Display for Log {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let dt = OffsetDateTime::from_unix_timestamp_nanos(self.timestamp as i128)
-            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
-
-        write!(
-            f,
-            "[{}] [{}] {} || {}",
-            dt.format(&Rfc3339).unwrap(),
-            self.id,
-            self.message,
-            self.attrs,
-        )
-    }
-}
+use crate::attr::Attrs;
 
 /// A collection of logs
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -78,8 +13,8 @@ pub struct Logs(pub Vec<Log>);
 
 impl Logs {
     /// Creates a new collection
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(logs: Vec<Log>) -> Self {
+        Self(logs)
     }
 }
 
@@ -94,5 +29,50 @@ impl Deref for Logs {
 impl DerefMut for Logs {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+/// A log
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Log {
+    /// Resource name
+    pub resource: String,
+    /// Resource attributes
+    pub resource_attrs: Attrs,
+    /// Scope name
+    pub scope: String,
+    /// Resource attributes
+    pub scope_attrs: Attrs,
+    /// Timestamp
+    pub timestamp: OffsetDateTime,
+    /// Level (severity)
+    pub level: i32,
+    /// Message
+    pub message: String,
+    /// Attributes
+    pub attrs: Attrs,
+    /// Trace id
+    pub trace_id: u128,
+    /// Span id
+    pub span_id: u64,
+}
+
+impl std::fmt::Display for Log {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let attrs_str = self
+            .attrs
+            .iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        write!(
+            f,
+            "[{}] ({}) {} | {}",
+            self.timestamp.format(&Rfc3339).expect("invalid datetime"),
+            self.level,
+            self.message,
+            attrs_str
+        )
     }
 }

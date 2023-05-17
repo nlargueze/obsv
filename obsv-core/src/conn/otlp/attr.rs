@@ -1,17 +1,20 @@
 //! OTLP attributes
 
+use obsv_otlp::proto;
+
 use crate::attr::{Attr, AttrValue};
 
-impl From<obsv_otlp::proto::common::v1::KeyValue> for Attr {
-    fn from(value: obsv_otlp::proto::common::v1::KeyValue) -> Self {
-        let key = value.key.clone();
-        let value = value.value;
-        Attr::new(&key, value)
+impl From<proto::common::v1::KeyValue> for Attr {
+    fn from(value: proto::common::v1::KeyValue) -> Self {
+        Attr {
+            key: value.key,
+            value: value.value.into(),
+        }
     }
 }
 
-impl From<Option<obsv_otlp::proto::common::v1::AnyValue>> for AttrValue {
-    fn from(value: Option<obsv_otlp::proto::common::v1::AnyValue>) -> Self {
+impl From<Option<proto::common::v1::AnyValue>> for AttrValue {
+    fn from(value: Option<proto::common::v1::AnyValue>) -> Self {
         match value {
             Some(v) => v.into(),
             None => AttrValue::None,
@@ -19,8 +22,8 @@ impl From<Option<obsv_otlp::proto::common::v1::AnyValue>> for AttrValue {
     }
 }
 
-impl From<obsv_otlp::proto::common::v1::AnyValue> for AttrValue {
-    fn from(value: obsv_otlp::proto::common::v1::AnyValue) -> Self {
+impl From<proto::common::v1::AnyValue> for AttrValue {
+    fn from(value: proto::common::v1::AnyValue) -> Self {
         match value.value {
             Some(v) => v.into(),
             None => AttrValue::None,
@@ -28,8 +31,8 @@ impl From<obsv_otlp::proto::common::v1::AnyValue> for AttrValue {
     }
 }
 
-impl From<obsv_otlp::proto::common::v1::any_value::Value> for AttrValue {
-    fn from(value: obsv_otlp::proto::common::v1::any_value::Value) -> Self {
+impl From<proto::common::v1::any_value::Value> for AttrValue {
+    fn from(value: proto::common::v1::any_value::Value) -> Self {
         match value {
             obsv_otlp::proto::common::v1::any_value::Value::StringValue(s) => AttrValue::Str(s),
             obsv_otlp::proto::common::v1::any_value::Value::BoolValue(b) => AttrValue::Bool(b),

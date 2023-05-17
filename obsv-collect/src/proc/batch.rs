@@ -4,6 +4,8 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+use crate::Data;
+
 use super::Processor;
 
 /// Batch processor
@@ -40,12 +42,13 @@ impl BatchProcessor {
 impl Processor for BatchProcessor {
     async fn process(&mut self, mut data: Vec<Data>) -> Option<Vec<Data>> {
         log::trace!("batch processing");
-        let mut buffer = self.buffer.lock().await;
-        *buffer.append(&mut data);
-        if *buffer.len() <= self.capacity {
-            return None;
-        }
-        let overflown = self.buffer.drain(self.capacity..).collect::<Vec<_>>();
-        return Some(overflown);
+        todo!("implement batch processing");
+        // let mut buffer = self.buffer.lock().await;
+        // *buffer.append(&mut data);
+        // if *buffer.len() <= self.capacity {
+        //     return None;
+        // }
+        // let overflown = self.buffer.drain(self.capacity..).collect::<Vec<_>>();
+        // return Some(overflown);
     }
 }

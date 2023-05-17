@@ -3,17 +3,13 @@
 use clickhouse_client::{orm::prelude::*, schema::DbSchema, Client};
 
 use self::{
-    event::DbUserEvent,
     log::DbLog,
-    metric::DbMetric,
     monitor::{DbMonitor, DbMonitorCheck},
     trace::DbSpan,
 };
 
 mod attr;
-mod event;
 mod log;
-mod metric;
 mod monitor;
 mod trace;
 
@@ -50,17 +46,13 @@ impl ClickhouseConnector {
 
     /// Returns the DB schema for obversability
     pub fn db_schema(&self) -> DbSchema {
-        let tbl_events = DbUserEvent::db_schema();
         let tbl_traces = DbSpan::db_schema();
-        let tbl_metrics = DbMetric::db_schema();
         let tbl_logs = DbLog::db_schema();
         let tbl_monitors = DbMonitor::db_schema();
         let tbl_monitors_checks = DbMonitorCheck::db_schema();
         DbSchema::new()
             .table(tbl_traces)
-            .table(tbl_metrics)
             .table(tbl_logs)
-            .table(tbl_events)
             .table(tbl_monitors)
             .table(tbl_monitors_checks)
     }

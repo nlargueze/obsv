@@ -1,7 +1,6 @@
 //! Core structures and utilities for `obsv`
 
 mod attr;
-mod event;
 mod log;
 mod metric;
 mod monitor;
@@ -9,7 +8,6 @@ mod trace;
 
 pub mod conn;
 
-pub use self::event::*;
 pub use self::log::*;
 pub use self::metric::*;
 pub use self::monitor::*;
@@ -31,10 +29,10 @@ mod tests {
             let layer_console = PrettyConsoleLayer::default()
                 .wrapped(true)
                 .oneline(false)
-                .events_only(true)
+                .events_only(false)
                 .show_time(false)
-                .show_target(true)
-                .show_span_info(false)
+                .show_target(false)
+                .show_span_info(true)
                 .indent(6);
             tracing_subscriber::registry()
                 .with(layer_console)

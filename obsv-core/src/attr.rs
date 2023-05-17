@@ -1,102 +1,19 @@
 //! Attributes
 
-use std::{
-    collections::HashMap,
-    fmt::Debug,
-    ops::{Deref, DerefMut},
-};
+use std::{collections::HashMap, fmt::Debug};
 
 use serde::{Deserialize, Serialize};
 
-/// Collection of attributes
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct Attrs(pub Vec<Attr>);
+/// A map of attributes
+pub type Attrs = HashMap<String, AttrValue>;
 
-impl Attrs {
-    /// Create a new [Attrs]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Adds a new attributes
-    pub fn attr(mut self, attr: Attr) -> Self {
-        self.0.push(attr);
-        self
-    }
-
-    /// Adds a new attributes
-    pub fn push(&mut self, attr: Attr) {
-        self.0.push(attr);
-    }
-}
-
-impl Deref for Attrs {
-    type Target = Vec<Attr>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Attrs {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl From<Vec<Attr>> for Attrs {
-    fn from(value: Vec<Attr>) -> Self {
-        Self(value)
-    }
-}
-
-impl std::fmt::Display for Attrs {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = self
-            .0
-            .iter()
-            .map(|attr| format!("{attr}"))
-            .collect::<Vec<_>>()
-            .join(", ");
-        write!(f, "{s}")
-    }
-}
-
-/// Attribute
-///
-/// An attribute is a key-value pair
+/// An attribute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attr {
     /// Key
     pub key: String,
     /// Value
     pub value: AttrValue,
-}
-
-impl Attr {
-    /// Creates a new [Attr]
-    pub fn new(key: &str, value: impl Into<AttrValue>) -> Self {
-        Self {
-            key: key.to_string(),
-            value: value.into(),
-        }
-    }
-
-    /// Returns the key
-    pub fn key(&self) -> &str {
-        &self.key
-    }
-
-    /// Returns the value
-    pub fn value(&self) -> &AttrValue {
-        &self.value
-    }
-}
-
-impl std::fmt::Display for Attr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}={}", self.key, self.value)
-    }
 }
 
 /// Attribute value

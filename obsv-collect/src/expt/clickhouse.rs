@@ -3,6 +3,8 @@
 use async_trait::async_trait;
 use clickhouse_client::http::Client;
 
+use crate::Data;
+
 use super::Exporter;
 
 /// Clickhouse exporter

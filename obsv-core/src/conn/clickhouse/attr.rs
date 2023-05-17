@@ -1,30 +1,47 @@
 //! Attributes
 
+use std::collections::HashMap;
+
 use clickhouse_client::orm::{DbType, DbValue};
 
-use crate::attr::{Attr, AttrValue, Attrs};
+use crate::attr::{AttrValue, Attrs};
 
-impl DbType for Attrs {
+/// DB attributes
+#[derive(Debug, Clone, Default)]
+pub struct DbAttrs(Attrs);
+
+impl From<Attrs> for DbAttrs {
+    fn from(value: Attrs) -> Self {
+        DbAttrs(value)
+    }
+}
+
+impl From<DbAttrs> for Attrs {
+    fn from(value: DbAttrs) -> Self {
+        value.0
+    }
+}
+
+impl DbType for DbAttrs {
     // NB: an attribute value is stored as a string
     const TYPE: &'static str = "Map(String, String)";
 }
 
-impl DbValue for Attrs {
+impl DbValue for DbAttrs {
     // NB: we store the attribute value with the RON serializer
     fn to_sql_str(&self) -> String {
         format!(
             "{{{}}}",
             self.0
                 .iter()
-                .map(|attr| {
-                    let key = &attr.key;
-                    let value_str = match ron::to_string(&attr.value) {
+                .map(|(k, v)| {
+                    let value_str = match ron::to_string(&v) {
                         Ok(ok) => ok,
                         Err(err) => {
                             panic!("Failed to serialize attr value: {}", err);
                         }
                     };
-                    format!("'{}': '{}'", key, value_str)
+                    format!("'{}': '{}'", k, value_str)
                 })
                 .collect::<Vec<_>>()
                 .join(",")
@@ -52,13 +69,13 @@ impl DbValue for Attrs {
                         let val = strip_string_quotes(val.trim());
                         let attr_val =
                             ron::from_str::<AttrValue>(val).expect("Invalid attribute db value");
-                        Some(Ok(Attr::new(key, attr_val)))
+                        Some(Ok((key.to_string(), attr_val)))
                     }
                     None => Some(Err("Invalid map".to_string())),
                 }
             })
-            .collect::<Result<Vec<Attr>, String>>()?;
-        Ok(Attrs(attrs))
+            .collect::<Result<HashMap<_, _>, String>>()?;
+        Ok(DbAttrs(attrs))
     }
 }
 
