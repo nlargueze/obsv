@@ -18,7 +18,13 @@ impl Attrs {
         Self::default()
     }
 
-    /// Pushes an attributes
+    /// Adds a new attributes
+    pub fn attr(mut self, attr: Attr) -> Self {
+        self.0.push(attr);
+        self
+    }
+
+    /// Adds a new attributes
     pub fn push(&mut self, attr: Attr) {
         self.0.push(attr);
     }
@@ -67,12 +73,6 @@ pub struct Attr {
     pub value: AttrValue,
 }
 
-impl std::fmt::Display for Attr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}={}", self.key, self.value)
-    }
-}
-
 impl Attr {
     /// Creates a new [Attr]
     pub fn new(key: &str, value: impl Into<AttrValue>) -> Self {
@@ -93,86 +93,30 @@ impl Attr {
     }
 }
 
+impl std::fmt::Display for Attr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}={}", self.key, self.value)
+    }
+}
+
 /// Attribute value
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AttrValue {
     None,
     Bool(bool),
-    Str(String),
-    Uint(u128),
-    Int(i128),
+    Uint(u64),
+    Int(i64),
     Float(f64),
+    Str(String),
+    Bytes(Vec<u8>),
     Array(Vec<AttrValue>),
     Map(HashMap<String, AttrValue>),
-    Bytes(Vec<u8>),
-}
-
-impl std::fmt::Display for AttrValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AttrValue::None => write!(f, "NULL"),
-            AttrValue::Bool(b) => write!(f, "{b}"),
-            AttrValue::Str(s) => write!(f, "{s}"),
-            AttrValue::Uint(u) => write!(f, "{u}"),
-            AttrValue::Int(i) => write!(f, "{i}"),
-            AttrValue::Float(x) => write!(f, "{x}"),
-            AttrValue::Array(arr) => {
-                let s = arr
-                    .iter()
-                    .map(|v| format!("{v}"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                write!(f, "{s}")
-            }
-            AttrValue::Map(map) => map
-                .iter()
-                .map(|(k, v)| format!("{k}={v}"))
-                .collect::<Vec<_>>()
-                .fmt(f),
-            AttrValue::Bytes(bytes) => write!(f, "{bytes:?}"),
-        }
-    }
 }
 
 impl AttrValue {
-    /// Instantiates a new bool value
-    pub fn new_bool(value: bool) -> Self {
-        Self::Bool(value)
-    }
-
-    /// Instantiates a new string value
-    pub fn new_string(value: &str) -> Self {
-        Self::Str(value.to_string())
-    }
-
-    /// Instantiates a new uint value
-    pub fn new_uint(value: impl Into<u128>) -> Self {
-        Self::Uint(value.into())
-    }
-
-    /// Instantiates a new int value
-    pub fn new_int(value: impl Into<i128>) -> Self {
-        Self::Int(value.into())
-    }
-
-    /// Instantiates a new float value
-    pub fn new_float(value: impl Into<f64>) -> Self {
-        Self::Float(value.into())
-    }
-
-    /// Instantiates a new array value
-    pub fn new_array(value: Vec<AttrValue>) -> Self {
-        Self::Array(value)
-    }
-
-    /// Instantiates a new map value
-    pub fn new_map(value: HashMap<String, AttrValue>) -> Self {
-        Self::Map(value)
-    }
-
-    /// Instantiates a new bytes value
-    pub fn new_bytes(value: Vec<u8>) -> Self {
-        Self::Bytes(value)
+    /// Creates a new [AttrValue]
+    pub fn new(value: impl Into<Self>) -> Self {
+        value.into()
     }
 
     /// Returns the bool value
@@ -192,7 +136,7 @@ impl AttrValue {
     }
 
     /// Returns the Uint value
-    pub fn uint(&self) -> Option<u128> {
+    pub fn uint(&self) -> Option<u64> {
         match self {
             Self::Uint(u) => Some(*u),
             _ => None,
@@ -200,7 +144,7 @@ impl AttrValue {
     }
 
     /// Returns the Int value
-    pub fn int(&self) -> Option<i128> {
+    pub fn int(&self) -> Option<i64> {
         match self {
             Self::Int(i) => Some(*i),
             _ => None,
@@ -236,6 +180,62 @@ impl AttrValue {
         match self {
             Self::Bytes(b) => Some(b.clone()),
             _ => None,
+        }
+    }
+}
+
+/// Implements
+macro_rules! impl_attr_value {
+    ($TY:ty, $VAR:tt) => {
+        impl From<$TY> for AttrValue {
+            fn from(value: $TY) -> Self {
+                AttrValue::$VAR(value.into())
+            }
+        }
+    };
+}
+
+impl_attr_value!(bool, Bool);
+impl_attr_value!(u8, Uint);
+impl_attr_value!(u16, Uint);
+impl_attr_value!(u32, Uint);
+impl_attr_value!(u64, Uint);
+impl_attr_value!(i8, Int);
+impl_attr_value!(i16, Int);
+impl_attr_value!(i32, Int);
+impl_attr_value!(i64, Int);
+impl_attr_value!(f32, Float);
+impl_attr_value!(f64, Float);
+impl_attr_value!(String, Str);
+impl_attr_value!(&String, Str);
+impl_attr_value!(&str, Str);
+impl_attr_value!(Vec<u8>, Bytes);
+impl_attr_value!(Vec<AttrValue>, Array);
+impl_attr_value!(HashMap<String, AttrValue>, Map);
+
+impl std::fmt::Display for AttrValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AttrValue::None => write!(f, "NULL"),
+            AttrValue::Bool(b) => write!(f, "{b}"),
+            AttrValue::Str(s) => write!(f, "{s}"),
+            AttrValue::Uint(u) => write!(f, "{u}"),
+            AttrValue::Int(i) => write!(f, "{i}"),
+            AttrValue::Float(x) => write!(f, "{x}"),
+            AttrValue::Array(arr) => {
+                let s = arr
+                    .iter()
+                    .map(|v| format!("{v}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                write!(f, "{s}")
+            }
+            AttrValue::Map(map) => map
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect::<Vec<_>>()
+                .fmt(f),
+            AttrValue::Bytes(bytes) => write!(f, "{bytes:?}"),
         }
     }
 }

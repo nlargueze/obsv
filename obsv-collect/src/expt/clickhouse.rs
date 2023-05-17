@@ -2,7 +2,6 @@
 
 use async_trait::async_trait;
 use clickhouse_client::http::Client;
-use obsv_core::Data;
 
 use super::Exporter;
 

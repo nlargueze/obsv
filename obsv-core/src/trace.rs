@@ -1,44 +1,17 @@
 //! Trace
 
+use std::ops::{Deref, DerefMut};
+
 use serde::{Deserialize, Serialize};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 use crate::attr::{Attr, Attrs};
 
-#[cfg(feature = "clickhouse")]
-use clickhouse_client::schema::prelude::*;
-
-/// Spans collection
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Spans(Vec<Span>);
-
-impl std::fmt::Display for Spans {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (i, span) in self.0.iter().enumerate() {
-            write!(f, "{span}")?;
-            if i < self.0.len() - 1 {
-                writeln!(f)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Spans {
-    /// Creates a new span collection
-    pub fn new(spans: Vec<Span>) -> Self {
-        Self(spans)
-    }
-}
-
 /// A span
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "clickhouse", derive(DbRow))]
-#[cfg_attr(feature = "clickhouse", db(table = "traces"))]
 pub struct Span {
     /// Span ID
     pub id: u128,
-    #[cfg_attr(feature = "clickhouse", db(primary))]
     /// Trace ID
     pub trace_id: u128,
     /// Parent span ID (0 if no parent)
@@ -53,27 +26,6 @@ pub struct Span {
     pub attrs: Attrs,
     /// Events
     pub events: SpanEvents,
-}
-
-impl std::fmt::Display for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let dt_start = OffsetDateTime::from_unix_timestamp_nanos(self.start as i128)
-            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
-        let dt_end = OffsetDateTime::from_unix_timestamp_nanos(self.end as i128)
-            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
-
-        write!(
-            f,
-            "trace_id={}, id={}, parent_id={}, name={}, start={}, end={} || {}",
-            self.trace_id,
-            self.id,
-            self.parent_id,
-            self.name,
-            dt_start.format(&Rfc3339).unwrap(),
-            dt_end.format(&Rfc3339).unwrap(),
-            self.attrs,
-        )
-    }
 }
 
 impl Span {
@@ -109,25 +61,49 @@ impl Span {
     }
 }
 
-/// Collection of span events
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SpanEvents(pub Vec<SpanEvent>);
+impl std::fmt::Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let dt_start = OffsetDateTime::from_unix_timestamp_nanos(self.start as i128)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
+        let dt_end = OffsetDateTime::from_unix_timestamp_nanos(self.end as i128)
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
 
-impl SpanEvents {
-    /// Create a new [Events]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Pushes an event
-    pub fn push(&mut self, event: SpanEvent) {
-        self.0.push(event);
+        write!(
+            f,
+            "trace_id={}, id={}, parent_id={}, name={}, start={}, end={} || {}",
+            self.trace_id,
+            self.id,
+            self.parent_id,
+            self.name,
+            dt_start.format(&Rfc3339).unwrap(),
+            dt_end.format(&Rfc3339).unwrap(),
+            self.attrs,
+        )
     }
 }
 
-impl From<Vec<SpanEvent>> for SpanEvents {
-    fn from(value: Vec<SpanEvent>) -> Self {
-        Self(value)
+/// A collection of spans
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct Spans(pub Vec<Span>);
+
+impl Spans {
+    /// Creates a new collection
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Deref for Spans {
+    type Target = Vec<Span>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Spans {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -149,5 +125,27 @@ impl SpanEvent {
     pub fn add_attr(&mut self, attr: impl Into<Attr>) -> &mut Self {
         self.attrs.push(attr.into());
         self
+    }
+}
+
+/// Collection of span events
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SpanEvents(pub Vec<SpanEvent>);
+
+impl SpanEvents {
+    /// Create a new [Events]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Pushes an event
+    pub fn push(&mut self, event: SpanEvent) {
+        self.0.push(event);
+    }
+}
+
+impl From<Vec<SpanEvent>> for SpanEvents {
+    fn from(value: Vec<SpanEvent>) -> Self {
+        Self(value)
     }
 }

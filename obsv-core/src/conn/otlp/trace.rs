@@ -1,40 +1,49 @@
 //! OTLP trace
 
-use obsv_otlp::proto::{
-    collector::trace::v1::ExportTraceServiceRequest,
-    common::v1::{any_value::Value, AnyValue, KeyValue},
-};
-
 use crate::{
-    attr::{Attr, AttrValue},
+    attr::Attr,
     trace::{Span, SpanEvent, Spans},
 };
 
-impl From<ExportTraceServiceRequest> for Spans {
-    fn from(req: ExportTraceServiceRequest) -> Self {
+impl From<obsv_otlp::proto::collector::trace::v1::ExportTraceServiceRequest> for Spans {
+    fn from(value: obsv_otlp::proto::collector::trace::v1::ExportTraceServiceRequest) -> Self {
         let mut spans = vec![];
-        for resource_span in &req.resource_spans {
-            let resource_attrs = if let Some(r) = &resource_span.resource {
+        for resource in value.resource_spans {
+            let resource_attrs = if let Some(r) = resource.resource {
+                // NB: the resource defines the
                 r.attributes
                     .iter()
-                    .map(|kv| {
-                        let attr: Attr = kv.clone().into();
-                        attr
-                    })
+                    .map(|kv| Attr::from(kv.clone()))
                     .collect::<Vec<_>>()
             } else {
                 vec![]
             };
 
-            for scope_span in &resource_span.scope_spans {
-                for otlp_span in &scope_span.spans {
-                    let mut span: Span = otlp_span.clone().into();
+            for scope_spans in resource.scope_spans {
+                let (_scope_name, _scope_version, scope_attrs) =
+                    if let Some(scope) = scope_spans.scope {
+                        (
+                            scope.name,
+                            scope.version,
+                            scope
+                                .attributes
+                                .iter()
+                                .map(|kv| Attr::from(kv.clone()))
+                                .collect::<Vec<_>>(),
+                        )
+                    } else {
+                        (String::new(), String::new(), vec![])
+                    };
+
+                for span in scope_spans.spans {
+                    let mut span: Span = span.into();
                     span.add_attrs(resource_attrs.clone());
+                    span.add_attrs(scope_attrs.clone());
                     spans.push(span);
                 }
             }
         }
-        Spans::new(spans)
+        Spans(spans)
     }
 }
 

@@ -1,7 +1,6 @@
 //! Batch processor
 
 use async_trait::async_trait;
-use obsv_core::Data;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 

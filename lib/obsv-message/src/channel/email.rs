@@ -129,7 +129,7 @@ impl EmailChannel {
     }
 
     /// Internal method to get the email
-    fn assemble_email(&self, message: &str) -> Result<lettre::Message, Error> {
+    fn assemble_email(&self, _message: &str) -> Result<lettre::Message, Error> {
         let mut builder = lettre::Message::builder();
 
         builder = builder.from(self.from.parse()?);

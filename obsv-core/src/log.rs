@@ -13,8 +13,14 @@ use crate::attr::{Attr, Attrs};
 pub struct Log {
     /// ID
     pub id: u128,
+    /// Trace id
+    pub trace_id: u128,
+    /// Span id
+    pub span_id: u64,
     /// Date (ns from EPOCH)
     pub timestamp: u64,
+    /// Level (severity)
+    pub level: i32,
     /// Message
     pub message: String,
     /// Attributes
@@ -26,7 +32,10 @@ impl Log {
     pub fn new(message: &str) -> Self {
         Self {
             id: Uuid::new_v4().as_u128(),
+            trace_id: 0,
+            span_id: 0,
             timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as u64,
+            level: 0,
             message: message.to_string(),
             attrs: Attrs::new(),
         }
@@ -64,13 +73,13 @@ impl std::fmt::Display for Log {
 }
 
 /// A collection of logs
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Logs(pub Vec<Log>);
 
 impl Logs {
     /// Creates a new collection
     pub fn new() -> Self {
-        Self(vec![])
+        Self::default()
     }
 }
 
