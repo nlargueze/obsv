@@ -60,20 +60,32 @@ fn main() -> Result<()> {
     // /opentelemetry/proto
     tonic_build::configure()
         .type_attribute(".", "#[derive(::serde::Serialize, ::serde::Deserialize)]")
-        .type_attribute(".", "#[serde(rename_all = \"camelCase\")]")
+        .type_attribute(".", r#"#[serde(rename_all = "camelCase")]"#)
         // Span ID is a 16 bytes and the JSON MUST be serialized as a 16 bytes HEX value with no leading 0x
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.trace_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
+            r#"#[serde(serialize_with = "crate::json::serialize_id", deserialize_with = "crate::json::deserialize_id")]"#,
         )
         // Span ID is a 8 bytes and the JSON MUST be serialized as a 8 bytes HEX value with no leading 0x
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.span_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
+            r#"#[serde(serialize_with = "crate::json::serialize_id", deserialize_with = "crate::json::deserialize_id")]"#,
         )
         .field_attribute(
             "opentelemetry.proto.trace.v1.Span.parent_span_id",
-            "#[serde(serialize_with = \"crate::json::serialize_id\", deserialize_with = \"crate::json::deserialize_id\")]",
+            r#"#[serde(serialize_with = "crate::json::serialize_id", deserialize_with = "crate::json::deserialize_id")]"#,
+        )
+        .field_attribute(
+            "opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse.partial_success",
+            r#"#[serde(deserialize_with = "crate::json::deserialize_trace_partial_success")]"#,
+        )
+        .field_attribute(
+            "opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse.partial_success",
+            r#"#[serde(deserialize_with = "crate::json::deserialize_logs_partial_success")]"#,
+        )
+        .field_attribute(
+            "opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse.partial_success",
+            r#"#[serde(deserialize_with = "crate::json::deserialize_metrics_partial_success")]"#,
         )
         .compile(&protos, &[&target_dir])?;
     println!("cargo:warning=generated rust tonic bindings");
