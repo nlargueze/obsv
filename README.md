@@ -1,11 +1,11 @@
 # obsv
 
-Super Simple Observability Platform
+Simple Observability Platform
 
 ## Deployment
 
-All services are packaged as an all-in-one executable, which can be configured to serve only specific services (deployed separately). It requires a running Clickhouse DB
-
+All services are packaged as an all-in-one executable, which can be configured 
+to serve only specific services (deployed separately).
 ```sh
 cargo run --bin osv
 ```
