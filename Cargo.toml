@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
+    # "libs/obsv-core",
+    # "libs/obsv-otlp",
+    "libs/obsv-not",
+    # 
     # "obsv-core",
     # "obsv-collect",
     # "obsv-monitor",
@@ -8,7 +12,5 @@ members = [
     # "obsv-notify",
     # "obsv-bin",
     # "lib/obsv-message",
-    # "libs/obsv-data",
-    "libs/obsv-otlp",
     # "lib/obsv-grafana",
 ]

@@ -1,27 +1,30 @@
 [package]
-name = "obsv-message"
+name = "obsv-not"
 version = "0.1.0"
 edition = "2021"
-description = "Messaging"
+description = "Notifications"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nlargueze/obsv"
 
 [features]
 default = ["email", "webhook"]
-email = ["dep:lettre"]
 webhook = ["dep:reqwest", "dep:serde_json"]
+email = ["dep:lettre", "dep:mrml", "dep:handlebars"]
 
 [dependencies]
-async-trait = "0.1.68"
+async-trait = "0.1.73"
+handlebars = { version = "4.4.0", optional = true }
 lettre = { version = "0.10.4", features = [
     "smtp-transport",
     "builder",
     "tokio1-rustls-tls",
 ], optional = true, default-features = false }
-reqwest = { version = "0.11.17", features = ["tokio-rustls"], optional = true }
+mrml = { version = "1.2.11", optional = true }
+reqwest = { version = "0.11.20", features = ["tokio-rustls"], optional = true }
 serde = { version = "1.0.160", features = ["derive"] }
-serde_json = { version = "1.0.96", optional = true }
-thiserror = "1.0.40"
+serde_json = { version = "1.0.105", optional = true }
+thiserror = "1.0.48"
 
 [dev-dependencies]
-tokio = { version = "1.28.0", features = ["full"] }
+salvo = "0.54.3"
+tokio = { version = "1.32.0", features = ["full"] }
